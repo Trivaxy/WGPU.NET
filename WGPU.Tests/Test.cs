@@ -31,9 +31,24 @@ namespace WGPU.Tests
 			}
 
 			var wgpuInstance = new Wgpu.InstanceImpl();
-			var nativeWindow = new GlfwNativeWindow(glfw, window).Win32.Value;
-			var surfaceDescriptorInfo = new Wgpu.SurfaceDescriptorFromWindowsHWND() { hwnd = nativeWindow.Hwnd, hinstance = nativeWindow.HInstance, chain = new Wgpu.ChainedStruct() { sType = Wgpu.SType.SurfaceDescriptorFromWindowsHWND } };
-			var surfaceDescriptor = new Wgpu.SurfaceDescriptor() { nextInChain = (IntPtr)(&surfaceDescriptorInfo) };
+			Wgpu.SurfaceDescriptor surfaceDescriptor;
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				var nativeWindow = new GlfwNativeWindow(glfw, window).Win32.Value;
+				var surfaceDescriptorInfo = new Wgpu.SurfaceDescriptorFromWindowsHWND() { hwnd = nativeWindow.Hwnd, hinstance = nativeWindow.HInstance, chain = new Wgpu.ChainedStruct() { sType = Wgpu.SType.SurfaceDescriptorFromWindowsHWND } };
+				surfaceDescriptor = new Wgpu.SurfaceDescriptor() { nextInChain = (IntPtr)(&surfaceDescriptorInfo) };
+			} else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+			{
+				var nativeWindow = new GlfwNativeWindow(glfw, window).X11.Value;
+				var surfaceDescriptorInfo = new Wgpu.SurfaceDescriptorFromXlib() { window = (uint)nativeWindow.Window, display = nativeWindow.Display, chain = new Wgpu.ChainedStruct() { sType = Wgpu.SType.SurfaceDescriptorFromXlib } };
+				surfaceDescriptor = new Wgpu.SurfaceDescriptor() { nextInChain = (IntPtr)(&surfaceDescriptorInfo) };
+			}
+			else
+			{
+				var nativeWindow = new GlfwNativeWindow(glfw, window).Cocoa.Value;
+				var surfaceDescriptorInfo = new Wgpu.SurfaceDescriptorFromMetalLayer() { layer = nativeWindow, chain = new Wgpu.ChainedStruct() { sType = Wgpu.SType.SurfaceDescriptorFromMetalLayer } };
+				surfaceDescriptor = new Wgpu.SurfaceDescriptor() { nextInChain = (IntPtr)(&surfaceDescriptorInfo) };
+			}
 			var surface = Wgpu.InstanceCreateSurface(wgpuInstance, in surfaceDescriptor);
 
 			var adapterOptions = new Wgpu.RequestAdapterOptions() { compatibleSurface = surface };
@@ -54,7 +69,7 @@ namespace WGPU.Tests
 			Wgpu.AdapterRequestDevice(adapter, in deviceDescriptor, (s, d, m, u) => { device = d; }, IntPtr.Zero);
 
 			var shaderSource = File.ReadAllText("shader.wgsl");
-			var wgslDescriptor = new Wgpu.ShaderModuleWGSLDescriptor() { chain = new Wgpu.ChainedStruct() { sType = Wgpu.SType.ShaderModuleWGSLDescriptor }, source = shaderSource };
+			var wgslDescriptor = new Wgpu.ShaderModuleWGSLDescriptor() { chain = new Wgpu.ChainedStruct() { sType = Wgpu.SType.ShaderModuleWGSLDescriptor }, code = shaderSource };
 			var wgslDescriptorPtr = MarshalAndBox(wgslDescriptor);
 			var shaderDescriptor = new Wgpu.ShaderModuleDescriptor() { nextInChain = wgslDescriptorPtr, label = "shader.wgsl" };
 			var shader = Wgpu.DeviceCreateShaderModule(device, in shaderDescriptor);
