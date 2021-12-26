@@ -4,7 +4,7 @@ WGPU.NET is a library providing cross-platform raw bindings to [wgpu-native](htt
 WGPU.NET targets .NET Standard 2.0.
 
 # Usage
-WGPU.NET is offered as a NuGet package [here](https://www.nuget.org/packages/WGPU.NET/0.2.0). Just install it and you're ready to go.
+WGPU.NET is offered as a NuGet package [here](https://www.nuget.org/packages/WGPU.NET/). Just install it and you're ready to go.
 
 Note that this library is purely bindings only, so you cannot create windows with it. I recommend using [Silk.NET's GLFW bindings](https://www.nuget.org/packages/Silk.NET.GLFW/) if you need windowing, but you can use anything you like as long as it can provide raw window handles.
 
