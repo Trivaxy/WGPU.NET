@@ -2,6 +2,7 @@
 using CppAst.CodeGen.Common;
 using CppAst.CodeGen.CSharp;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Zio.FileSystems;
@@ -16,7 +17,7 @@ namespace BindingsGenerator
 
 			try
 			{
-				AcceptHeaderDirectory("headers", "Wgpu", "WGPU.NET");
+				AcceptHeaderDirectory(new[] { "headers", "headers/webgpu-headers" }, "Wgpu", "WGPU.NET");
 			}
 			catch (Exception e)
 			{
@@ -29,9 +30,12 @@ namespace BindingsGenerator
 			Console.ReadKey();
 		}
 
-		public static void AcceptHeaderDirectory(string headerDirectory, string outputClass, string outputNamespace)
+		public static void AcceptHeaderDirectory(IEnumerable<string> headerDirectories, string outputClass, string outputNamespace)
 		{
-			Console.WriteLine($"Reading from {headerDirectory}...");
+			Console.WriteLine("Searching in:");
+
+			foreach (string directory in headerDirectories)
+				Console.WriteLine($"- {directory}");
 
 			CSharpConverterOptions options = new CSharpConverterOptions()
 			{
@@ -95,9 +99,10 @@ namespace BindingsGenerator
 				}
 			};
 
-			options.IncludeFolders.Add(headerDirectory);
+			options.IncludeFolders.AddRange(headerDirectories);
 
-			CSharpCompilation compilation = CSharpConverter.Convert(Directory.EnumerateFiles(headerDirectory, "*.h").ToList(), options);
+			IEnumerable<string> headerFiles = headerDirectories.SelectMany(dir => Directory.EnumerateFiles(dir, "*.h"));
+			CSharpCompilation compilation = CSharpConverter.Convert(headerFiles.ToList(), options);
 
 			if (compilation.HasErrors)
 			{

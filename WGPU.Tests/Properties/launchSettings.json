@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "WGPU.Tests": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "RUST_BACKTRACE": "full"
+      }
+    }
+  }
+}

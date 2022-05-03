@@ -12,6 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="headers\webgpu-headers\webgpu.h">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="headers\webgpu.h">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -20,7 +20,7 @@ namespace WGPU.Tests
 			}
 
 			glfw.WindowHint(WindowHintClientApi.ClientApi, ClientApi.NoApi);
-			WindowHandle* window = glfw.CreateWindow(300, 300, "Wgpu.NET test", null, null);
+			WindowHandle* window = glfw.CreateWindow(300, 300, "Wgpu.NET Test", null, null);
 
 			if (window == null)
 			{
@@ -40,7 +40,7 @@ namespace WGPU.Tests
 			} else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 			{
 				var nativeWindow = new GlfwNativeWindow(glfw, window).X11.Value;
-				var surfaceDescriptorInfo = new Wgpu.SurfaceDescriptorFromXlib() { window = (uint)nativeWindow.Window, display = nativeWindow.Display, chain = new Wgpu.ChainedStruct() { sType = Wgpu.SType.SurfaceDescriptorFromXlib } };
+				var surfaceDescriptorInfo = new Wgpu.SurfaceDescriptorFromXlibWindow() { window = (uint)nativeWindow.Window, display = nativeWindow.Display, chain = new Wgpu.ChainedStruct() { sType = Wgpu.SType.SurfaceDescriptorFromXlibWindow } };
 				surfaceDescriptor = new Wgpu.SurfaceDescriptor() { nextInChain = (IntPtr)(&surfaceDescriptorInfo) };
 			}
 			else
@@ -182,7 +182,7 @@ namespace WGPU.Tests
 					resolveTarget = default,
 					loadOp = Wgpu.LoadOp.Clear,
 					storeOp = Wgpu.StoreOp.Store,
-					clearColor = new Wgpu.Color() { r = 0, g = 1, b = 0, a = 1 }
+					clearValue = new Wgpu.Color() { r = 0, g = 1, b = 0, a = 1 }
 				};
 
 				var renderPassDescriptor = new Wgpu.RenderPassDescriptor()
@@ -195,7 +195,7 @@ namespace WGPU.Tests
 
 				Wgpu.RenderPassEncoderSetPipeline(renderPass, renderPipeline);
 				Wgpu.RenderPassEncoderDraw(renderPass, 3, 1, 0, 0);
-				Wgpu.RenderPassEncoderEndPass(renderPass);
+				Wgpu.RenderPassEncoderEnd(renderPass);
 
 				var queue = Wgpu.DeviceGetQueue(device);
 				var commandBufferDescriptor = new Wgpu.CommandBufferDescriptor();
