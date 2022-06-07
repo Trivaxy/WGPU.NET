@@ -409,10 +409,17 @@ namespace WGPU.NET
                 IntPtr.Zero);
         }
 
+        private static readonly List<Wgpu.ErrorCallback> s_errorCallbacks = 
+            new List<Wgpu.ErrorCallback>();
+
         public void SetUncapturedErrorCallback(ErrorCallback callback)
         {
+            Wgpu.ErrorCallback errorCallback = (t, m, _) => callback(t, m);
+
+            s_errorCallbacks.Add(errorCallback);
+
             DeviceSetUncapturedErrorCallback(Impl,
-                (t, m, _) => callback(t, m),
+                errorCallback,
                 IntPtr.Zero);
         }
 

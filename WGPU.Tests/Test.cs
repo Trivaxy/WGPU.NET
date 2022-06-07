@@ -43,8 +43,6 @@ namespace WGPU.Tests
 			Debugger.Break();
 		}
 
-		private static ErrorCallback errorCallback = new ErrorCallback(ErrorCallback);
-
 		public static unsafe void Main(string[] args)
 		{
 			Glfw glfw = GlfwProvider.GLFW.Value;
@@ -113,8 +111,7 @@ namespace WGPU.Tests
 			);
 
 
-			//TODO prevent Callback from being garbage collected
-			device.SetUncapturedErrorCallback(errorCallback);
+			device.SetUncapturedErrorCallback(ErrorCallback);
 
 
 			Span<Vertex> vertices = new Vertex[]
