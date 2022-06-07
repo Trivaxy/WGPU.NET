@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="Silk.NET.GLFW" Version="2.9.0" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="2.1.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Resources\WGPU-Logo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="shader.wgsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

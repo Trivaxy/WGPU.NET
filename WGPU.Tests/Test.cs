@@ -1,16 +1,20 @@
 ﻿using Silk.NET.GLFW;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using WGPU.NET;
+using Image = SixLabors.ImageSharp.Image;
 
 namespace WGPU.Tests
 {
 
 	public static class Test
 	{
+		record struct Vec2(float X, float Y);
 		record struct Vec3(float X, float Y, float Z);
 
 		record struct Vec4(float X, float Y, float Z, float W);
@@ -19,11 +23,13 @@ namespace WGPU.Tests
 		{
 			public Vec3 Position;
 			public Vec4 Color;
+            public Vec2 UV;
 
-            public Vertex(Vec3 position, Vec4 color)
+            public Vertex(Vec3 position, Vec4 color, Vec2 uv)
             {
                 Position = position;
                 Color = color;
+                UV = uv;
             }
         }
 
@@ -31,6 +37,17 @@ namespace WGPU.Tests
         {
 			public float Size;
         }
+
+		public static void ErrorCallback(Wgpu.ErrorType type, string message)
+        {
+			var _message = message.Replace("\\r\\n", "\n");
+
+			Console.WriteLine($"{type}: {_message}");
+
+			Debugger.Break();
+		}
+
+		private static ErrorCallback errorCallback = new ErrorCallback(ErrorCallback);
 
 		public static unsafe void Main(string[] args)
 		{
@@ -99,24 +116,19 @@ namespace WGPU.Tests
 				}
 			);
 
-			device.SetUncapturedErrorCallback((t,m) => 
-			{
-				var message = m.Replace("\\r\\n", "\n");
 
-				Console.WriteLine($"{t}: {message}"); 
-
-				Debugger.Break();
-			});
+			//TODO prevent Callback from being garbage collected
+			device.SetUncapturedErrorCallback(errorCallback);
 
 
 			Span<Vertex> vertices = new Vertex[]
 			{
-				new Vertex(new Vec3( -1,-1,0), new Vec4(1,1,0,1)),
-				new Vertex(new Vec3(  1,-1,0), new Vec4(0,1,1,1)),
-				new Vertex(new Vec3(  0, 1,0), new Vec4(1,0,1,1)),
+				new Vertex(new Vec3( -1,-1,0), new Vec4(1,1,0,1), new Vec2(-.2f,1.0f)),
+				new Vertex(new Vec3(  1,-1,0), new Vec4(0,1,1,1), new Vec2(1.2f,1.0f)),
+				new Vertex(new Vec3(  0, 1,0), new Vec4(1,0,1,1), new Vec2(0.5f,-.5f)),
 			};
 
-            
+
 			var vertexBuffer = device.CreateBuffer("VertexBuffer", true, (ulong)(vertices.Length * sizeof(Vertex)), Wgpu.BufferUsage.Vertex);
 
 			{
@@ -135,6 +147,66 @@ namespace WGPU.Tests
 
 			var uniformBuffer = device.CreateBuffer("UniformBuffer", false, (ulong)sizeof(UniformBuffer), Wgpu.BufferUsage.Uniform | Wgpu.BufferUsage.CopyDst);
 
+            
+
+			var image = Image.Load<Rgba32>(Path.Combine("Resources","WGPU-Logo.png"));
+
+			var imageSize = new Wgpu.Extent3D 
+			{ 
+				width = (uint)image.Width, 
+				height = (uint)image.Height, 
+				depthOrArrayLayers = 1 
+			};
+
+			var imageTexture = device.CreateTexture("Image", 
+				usage: Wgpu.TextureUsage.TextureBinding | Wgpu.TextureUsage.CopyDst, 
+				dimension: Wgpu.TextureDimension.TwoDimensions,
+				size: imageSize,
+				format: Wgpu.TextureFormat.RGBA8Unorm, 
+				mipLevelCount: 1, 
+				sampleCount: 1
+			);
+
+			{
+				Span<Rgba32> pixels = new Rgba32[image.Width * image.Height];
+
+				image.CopyPixelDataTo(pixels);
+
+				device.GetQueue().WriteTexture<Rgba32>(
+					destination: new ImageCopyTexture
+					{
+						Aspect = Wgpu.TextureAspect.All,
+						MipLevel = 0,
+						Origin = default,
+						Texture = imageTexture
+					},
+					data: pixels, 
+					dataLayout: new Wgpu.TextureDataLayout
+					{
+						bytesPerRow = (uint)(sizeof(Rgba32) * image.Width),
+						offset = 0,
+						rowsPerImage = (uint)image.Height
+					},
+					writeSize: imageSize
+				);
+			}
+
+			var imageSampler = device.CreateSampler("ImageSampler",
+				addressModeU: Wgpu.AddressMode.ClampToEdge,
+				addressModeV: Wgpu.AddressMode.ClampToEdge,
+				addressModeW: default,
+
+				magFilter: Wgpu.FilterMode.Linear,
+				minFilter: Wgpu.FilterMode.Linear,
+				mipmapFilter: Wgpu.MipmapFilterMode.Linear,
+
+				lodMinClamp: 0,
+				lodMaxClamp: 1,
+				compare: default,
+
+				maxAnisotropy: 1
+			);
+			
 
 
 			var bindGroupLayout = device.CreateBindgroupLayout(null, new Wgpu.BindGroupLayoutEntry[] {
@@ -146,7 +218,26 @@ namespace WGPU.Tests
 						type = Wgpu.BufferBindingType.Uniform,
                     },
 					visibility = (uint)Wgpu.ShaderStage.Vertex
-                }
+                },
+				new Wgpu.BindGroupLayoutEntry
+				{
+					binding = 1,
+					sampler = new Wgpu.SamplerBindingLayout
+                    {
+						type = Wgpu.SamplerBindingType.Filtering
+                    },
+					visibility = (uint)Wgpu.ShaderStage.Fragment
+				},
+				new Wgpu.BindGroupLayoutEntry
+				{
+					binding = 2,
+					texture = new Wgpu.TextureBindingLayout
+                    {
+						viewDimension = Wgpu.TextureViewDimension.TwoDimensions,
+						sampleType = Wgpu.TextureSampleType.Float
+                    },
+					visibility = (uint)Wgpu.ShaderStage.Fragment
+				}
 			});
 
 			var bindGroup = device.CreateBindGroup(null, bindGroupLayout, new BindGroupEntry[]
@@ -155,7 +246,25 @@ namespace WGPU.Tests
                 {
 					Binding = 0,
 					Buffer = uniformBuffer
-                }
+                },
+				new BindGroupEntry
+				{
+					Binding = 1,
+					Sampler = imageSampler
+				},
+				new BindGroupEntry
+				{
+					Binding = 2,
+					TextureView = imageTexture.CreateTextureView("ImageTextureView", 
+						format: Wgpu.TextureFormat.RGBA8Unorm, 
+						dimension: Wgpu.TextureViewDimension.TwoDimensions,
+						baseMipLevel: 0,
+						mipLevelCount: 1,
+						baseArrayLayer: 0,
+						arrayLayerCount: 1,
+						aspect: Wgpu.TextureAspect.All
+					)
+				}
 			});
 
 
@@ -199,6 +308,13 @@ namespace WGPU.Tests
 								format = Wgpu.VertexFormat.Float32x4,
 								offset = (ulong)sizeof(Vec3), //right after positon
 								shaderLocation = 1
+							},
+							//uv
+							new Wgpu.VertexAttribute
+							{
+								format = Wgpu.VertexFormat.Float32x2,
+								offset = (ulong)(sizeof(Vec3)+sizeof(Vec4)), //right after color
+								shaderLocation = 2
 							}
 						}
                     }
