@@ -23,23 +23,23 @@ namespace WGPU.Tests
 		{
 			public Vec3 Position;
 			public Vec4 Color;
-            public Vec2 UV;
+			public Vec2 UV;
 
-            public Vertex(Vec3 position, Vec4 color, Vec2 uv)
-            {
-                Position = position;
-                Color = color;
-                UV = uv;
-            }
-        }
+			public Vertex(Vec3 position, Vec4 color, Vec2 uv)
+			{
+				Position = position;
+				Color = color;
+				UV = uv;
+			}
+		}
 
 		struct UniformBuffer
-        {
+		{
 			public float Size;
-        }
+		}
 
 		public static void ErrorCallback(Wgpu.ErrorType type, string message)
-        {
+		{
 			var _message = message.Replace("\\r\\n", "\n");
 
 			Console.WriteLine($"{type}: {_message}");
@@ -403,7 +403,7 @@ namespace WGPU.Tests
 
 				glfw.GetWindowSize(window, out int width, out int height);
 
-				if (width != prevWidth || height != prevHeight)
+				if ((width != prevWidth || height != prevHeight) && width != 0 && height != 0 )
 				{
 					prevWidth = width;
 					prevHeight = height;
