@@ -4,6 +4,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using WGPU.NET;
@@ -14,18 +15,13 @@ namespace WGPU.Tests
 
 	public static class Test
 	{
-		record struct Vec2(float X, float Y);
-		record struct Vec3(float X, float Y, float Z);
-
-		record struct Vec4(float X, float Y, float Z, float W);
-
 		struct Vertex
 		{
-			public Vec3 Position;
-			public Vec4 Color;
-			public Vec2 UV;
+			public Vector3 Position;
+			public Vector4 Color;
+			public Vector2 UV;
 
-			public Vertex(Vec3 position, Vec4 color, Vec2 uv)
+			public Vertex(Vector3 position, Vector4 color, Vector2 uv)
 			{
 				Position = position;
 				Color = color;
@@ -35,7 +31,7 @@ namespace WGPU.Tests
 
 		struct UniformBuffer
 		{
-			public float Size;
+			public Matrix4x4 Transform;
 		}
 
 		public static void ErrorCallback(Wgpu.ErrorType type, string message)
@@ -123,9 +119,9 @@ namespace WGPU.Tests
 
 			Span<Vertex> vertices = new Vertex[]
 			{
-				new Vertex(new Vec3( -1,-1,0), new Vec4(1,1,0,1), new Vec2(-.2f,1.0f)),
-				new Vertex(new Vec3(  1,-1,0), new Vec4(0,1,1,1), new Vec2(1.2f,1.0f)),
-				new Vertex(new Vec3(  0, 1,0), new Vec4(1,0,1,1), new Vec2(0.5f,-.5f)),
+				new Vertex(new ( -1,-1,0), new (1,1,0,1), new (-.2f,1.0f)),
+				new Vertex(new (  1,-1,0), new (0,1,1,1), new (1.2f,1.0f)),
+				new Vertex(new (  0, 1,0), new (1,0,1,1), new (0.5f,-.5f)),
 			};
 
 
@@ -142,7 +138,7 @@ namespace WGPU.Tests
 
 			UniformBuffer uniformBufferData = new UniformBuffer
 			{
-				Size = 0.5f
+				Transform = Matrix4x4.Identity
 			};
 
 			var uniformBuffer = device.CreateBuffer("UniformBuffer", false, (ulong)sizeof(UniformBuffer), Wgpu.BufferUsage.Uniform | Wgpu.BufferUsage.CopyDst);
@@ -306,14 +302,14 @@ namespace WGPU.Tests
 							new Wgpu.VertexAttribute
 							{
 								format = Wgpu.VertexFormat.Float32x4,
-								offset = (ulong)sizeof(Vec3), //right after positon
+								offset = (ulong)sizeof(Vector3), //right after positon
 								shaderLocation = 1
 							},
 							//uv
 							new Wgpu.VertexAttribute
 							{
 								format = Wgpu.VertexFormat.Float32x2,
-								offset = (ulong)(sizeof(Vec3)+sizeof(Vec4)), //right after color
+								offset = (ulong)(sizeof(Vector3)+sizeof(Vector4)), //right after color
 								shaderLocation = 2
 							}
 						}
@@ -397,8 +393,29 @@ namespace WGPU.Tests
 			{
 				TimeSpan duration = DateTime.Now - startTime;
 
-				uniformBufferData.Size = (float)(1 + 0.5 * Math.Sin(duration.TotalSeconds*2.0));
 
+				glfw.GetCursorPos(window, out double mouseX, out double mouseY);
+
+				Vector2 nrmMouseCoords = new Vector2(
+					(float)(mouseX * 1 - prevWidth  * 0.5f) / prevWidth,
+				    (float)(mouseY * 1 - prevHeight * 0.5f) / prevHeight
+				);
+
+
+				uniformBufferData.Transform =
+				Matrix4x4.CreateRotationY(
+					MathF.Sign(nrmMouseCoords.X) * (MathF.Log(Math.Abs(nrmMouseCoords.X) + 1)) * 0.9f
+				) *
+				Matrix4x4.CreateRotationX(
+					MathF.Sign(nrmMouseCoords.Y) * (MathF.Log(Math.Abs(nrmMouseCoords.Y) + 1)) * 0.9f
+				) *
+				Matrix4x4.CreateScale(
+					(float)(1 + 0.1 * Math.Sin(duration.TotalSeconds * 2.0))
+				) *
+				Matrix4x4.CreateTranslation(0, 0, -3)
+				;
+
+				uniformBufferData.Transform *= CreatePerspective(MathF.PI/4f, (float)prevWidth/prevHeight, 0.01f, 1000);
 
 
 				glfw.GetWindowSize(window, out int width, out int height);
@@ -469,6 +486,39 @@ namespace WGPU.Tests
 
 			glfw.DestroyWindow(window);
 			glfw.Terminate();
+		}
+
+		private static Matrix4x4 CreatePerspective(float fov, float aspectRatio, float near, float far)
+		{
+			if (fov <= 0.0f || fov >= MathF.PI)
+				throw new ArgumentOutOfRangeException(nameof(fov));
+
+			if (near <= 0.0f)
+				throw new ArgumentOutOfRangeException(nameof(near));
+
+			if (far <= 0.0f)
+				throw new ArgumentOutOfRangeException(nameof(far));
+
+			float yScale = 1.0f / MathF.Tan(fov * 0.5f);
+			float xScale = yScale / aspectRatio;
+
+			Matrix4x4 result;
+
+			result.M11 = xScale;
+			result.M12 = result.M13 = result.M14 = 0.0f;
+
+			result.M22 = yScale;
+			result.M21 = result.M23 = result.M24 = 0.0f;
+
+			result.M31 = result.M32 = 0.0f;
+			var negFarRange = float.IsPositiveInfinity(far) ? -1.0f : far / (near - far);
+			result.M33 = negFarRange;
+			result.M34 = -1.0f;
+
+			result.M41 = result.M42 = result.M44 = 0.0f;
+			result.M43 = near * negFarRange;
+
+			return result;
 		}
 	}
 }

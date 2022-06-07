@@ -1,5 +1,5 @@
 ﻿struct UniformBuffer {
-    size : f32
+    mdlMat : mat4x4<f32>
 };
 
 struct VOut {
@@ -16,7 +16,7 @@ var<uniform> ub : UniformBuffer;
 fn vs_main(@location(0) pos: vec3<f32>, @location(1) col: vec4<f32>, @location(2) uv: vec2<f32>) -> VOut {
     
 
-    return VOut(vec4<f32>(pos*ub.size, 1.0), col, uv);
+    return VOut(ub.mdlMat*vec4<f32>(pos, 1.0), col, uv);
 }
 
 
@@ -32,13 +32,13 @@ var tex : texture_2d<f32>;
 @stage(fragment)
 fn fs_main(in : VOut) -> @location(0) vec4<f32> {
     let rpos = vec2<f32>(
-        floor(in.pos.x*0.05),
-        floor(in.pos.y*0.05)
+        floor(in.uv.x*10.0),
+        floor(in.uv.y*10.0)
     );
 
     let texCol = textureSample(tex,samp,in.uv);
 
     let col = mix(in.col, vec4<f32>(texCol.rgb,1.0), texCol.a);
 
-    return col * mix(1.0, 0.9, f32(rpos.x%2.0 == rpos.y%2.0));
+    return col * mix(1.0, 0.9, f32((rpos.x%2.0+2.0)%2.0 == (rpos.y%2.0+2.0)%2.0));
 }
