@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="shader.wgsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
