@@ -14,6 +14,9 @@ namespace WGPU.NET
 
         private TextureView(TextureViewImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(TextureView));
+
             Impl = impl;
         }
 

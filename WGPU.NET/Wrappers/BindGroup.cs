@@ -11,6 +11,9 @@ namespace WGPU.NET
 
         internal BindGroup(BindGroupImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(BindGroup));
+
             Impl = impl;
         }
     }

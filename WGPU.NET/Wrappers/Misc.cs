@@ -10,6 +10,9 @@ namespace WGPU.NET
 
         internal ComputePipeline(ComputePipelineImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(ComputePipeline));
+
             Impl = impl;
         }
 
@@ -25,6 +28,9 @@ namespace WGPU.NET
 
         internal PipelineLayout(PipelineLayoutImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(PipelineLayout));
+
             Impl = impl;
         }
     }
@@ -35,6 +41,9 @@ namespace WGPU.NET
 
         internal QuerySet(QuerySetImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(QuerySet));
+
             Impl = impl;
         }
 
@@ -64,6 +73,9 @@ namespace WGPU.NET
 
         internal RenderPipeline(RenderPipelineImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(RenderPipeline));
+
             Impl = impl;
         }
 
@@ -79,6 +91,9 @@ namespace WGPU.NET
 
         internal Sampler(SamplerImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(Sampler));
+
             Impl = impl;
         }
     }
@@ -89,6 +104,9 @@ namespace WGPU.NET
 
         internal ShaderModule(ShaderModuleImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(ShaderModule));
+
             Impl = impl;
         }
 
@@ -118,6 +136,9 @@ namespace WGPU.NET
 
         internal SwapChain(SwapChainImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(SwapChain));
+
             Impl = impl;
         }
 
@@ -136,6 +157,9 @@ namespace WGPU.NET
 
         internal CommandBuffer(CommandBufferImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(CommandBuffer));
+
             Impl = impl;
         }
     }
@@ -146,6 +170,8 @@ namespace WGPU.NET
 
         internal RenderBundle(RenderBundleImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(RenderBundle));
             Impl = impl;
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
@@ -45,6 +46,9 @@ namespace WGPU.NET
 
         internal CommandEncoder(CommandEncoderImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(CommandEncoder));
+
             Impl = impl;
         }
 

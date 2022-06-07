@@ -9,6 +9,9 @@ namespace WGPU.NET
 
         internal Texture(TextureImpl impl)
         {
+            if(impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(Texture));
+
             Impl = impl;
         }
 

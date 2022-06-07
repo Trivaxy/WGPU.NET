@@ -12,6 +12,9 @@ namespace WGPU.NET
 
         internal RenderPassEncoder(RenderPassEncoderImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(RenderPassEncoder));
+
             Impl = impl;
         }
 

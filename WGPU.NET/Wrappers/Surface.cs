@@ -13,6 +13,9 @@ namespace WGPU.NET
 
         internal Surface(SurfaceImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(Surface));
+
             Impl = impl;
         }
 

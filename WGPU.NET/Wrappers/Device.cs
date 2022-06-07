@@ -75,6 +75,9 @@ namespace WGPU.NET
 
         internal Device(DeviceImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(Device));
+
             Impl = impl;
         }
 

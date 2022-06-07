@@ -14,6 +14,9 @@ namespace WGPU.NET
 
         private BindGroupLayout(BindGroupLayoutImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(BindGroupLayout));
+
             Impl = impl;
         }
 

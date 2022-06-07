@@ -23,6 +23,9 @@ namespace WGPU.NET
 
         internal Buffer(BufferImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(Buffer));
+
             Impl = impl;
         }
 

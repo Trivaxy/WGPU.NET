@@ -16,6 +16,9 @@ namespace WGPU.NET
 
         private Queue(QueueImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(Queue));
+
             Impl = impl;
         }
 

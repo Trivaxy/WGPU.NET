@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
@@ -9,6 +10,9 @@ namespace WGPU.NET
 
         internal RenderBundleEncoder(RenderBundleEncoderImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(RenderBundleEncoder));
+
             Impl = impl;
         }
 

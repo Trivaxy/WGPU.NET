@@ -13,4 +13,13 @@ namespace WGPU.NET
 
         }
     }
+
+    public class ResourceCreationError : Exception
+    {
+        public ResourceCreationError(string resourceType)
+            : base($"There has been an error creating this {resourceType}, handle was null")
+        {
+
+        }
+    }
 }

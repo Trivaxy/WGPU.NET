@@ -24,6 +24,9 @@ namespace WGPU.NET
 
         internal Adapter(AdapterImpl impl)
         {
+            if (impl.Handle == IntPtr.Zero)
+                throw new ResourceCreationError(nameof(Adapter));
+
             Impl = impl;
         }
 
