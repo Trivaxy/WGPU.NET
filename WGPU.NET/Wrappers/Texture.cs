@@ -7,12 +7,26 @@ namespace WGPU.NET
     {
         private TextureImpl _impl;
 
-        internal Texture(TextureImpl impl)
+        private TextureDescriptor _descriptor;
+
+
+
+        public string Label => _descriptor.label;
+        public uint Usage => _descriptor.usage;
+        public TextureDimension Dimension => _descriptor.dimension;
+        public Extent3D Size => _descriptor.size;
+        public TextureFormat Format => _descriptor.format;
+        public uint MipLevelCount => _descriptor.mipLevelCount;
+        public uint SampleCount => _descriptor.sampleCount;
+
+        internal Texture(TextureImpl impl, TextureDescriptor descriptor)
         {
             if(impl.Handle == IntPtr.Zero)
                 throw new ResourceCreationError(nameof(Texture));
 
             Impl = impl;
+
+            _descriptor = descriptor;
         }
 
         internal TextureImpl Impl
@@ -47,6 +61,28 @@ namespace WGPU.NET
         {
             TextureDestroy(Impl);
             Impl = default;
+        }
+    }
+
+    public static partial class TextureExtensions
+    {
+        public static TextureView CreateTextureView(this Texture texture)
+        {
+            return texture.CreateTextureView(texture.Label + " View",
+                texture.Format,
+                texture.Dimension switch
+                {
+                    TextureDimension.OneDimension => TextureViewDimension.OneDimension,
+                    TextureDimension.TwoDimensions => TextureViewDimension.TwoDimensions,
+                    TextureDimension.ThreeDimensions => TextureViewDimension.ThreeDimensions,
+                    TextureDimension.Force32 => TextureViewDimension.Force32,
+                    _ => throw new ArgumentException("Invalid value", nameof(texture.Dimension))
+                },
+                0,
+                texture.MipLevelCount,
+                0,
+                texture.Size.depthOrArrayLayers,
+                TextureAspect.All);
         }
     }
 }

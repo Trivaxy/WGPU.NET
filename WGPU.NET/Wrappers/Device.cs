@@ -354,18 +354,18 @@ namespace WGPU.NET
             TextureDimension dimension, Extent3D size, TextureFormat format,
             uint mipLevelCount, uint sampleCount)
         {
-            return new Texture(
-                DeviceCreateTexture(Impl, new TextureDescriptor
-                {
-                    label = label,
-                    usage = (uint)usage,
-                    dimension = dimension,
-                    size = size,
-                    format = format,
-                    mipLevelCount = mipLevelCount,
-                    sampleCount = sampleCount,
-                })
-            );
+            var desc = new TextureDescriptor
+            {
+                label = label,
+                usage = (uint)usage,
+                dimension = dimension,
+                size = size,
+                format = format,
+                mipLevelCount = mipLevelCount,
+                sampleCount = sampleCount,
+            };
+
+            return new Texture(DeviceCreateTexture(Impl, desc), desc);
         }
 
         public unsafe FeatureName[] EnumerateFeatures()
