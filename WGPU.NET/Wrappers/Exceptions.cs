@@ -4,10 +4,11 @@ using System.Text;
 
 namespace WGPU.NET
 {
-    public class HandleDestroyedException : Exception
+    public class HandleDroppedOrDestroyedException : Exception
     {
-        public HandleDestroyedException(string resourceType)
-            : base($"Handle of this {resourceType} has been destroyed" +
+        public HandleDroppedOrDestroyedException(string resourceType)
+            : base($"Handle of this {resourceType} has been dropped " +
+                  $"or it's resources have been destroyed" +
                   $"therefore it can't be used anymore")
         {
 

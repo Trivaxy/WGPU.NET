@@ -65,7 +65,7 @@ namespace WGPU.NET
             get
             {
                 if (_impl.Handle == IntPtr.Zero)
-                    throw new HandleDestroyedException(nameof(Device));
+                    throw new HandleDroppedOrDestroyedException(nameof(Device));
 
                 return _impl;
             }
@@ -425,9 +425,22 @@ namespace WGPU.NET
 
 
 
-        public void DestroyHandle()
+        /// <summary>
+        /// Destroys the GPU Resource associated to this <see cref="Device"/>
+        /// </summary>
+        public void DestroyResource()
         {
             DeviceDestroy(Impl);
+            Impl = default;
+        }
+        
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="Device"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            DeviceDrop(Impl);
+            Impl = default;
         }
     }
 

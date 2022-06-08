@@ -10,7 +10,20 @@ namespace WGPU.NET
         private static Dictionary<BindGroupLayoutImpl, BindGroupLayout> instances =
             new Dictionary<BindGroupLayoutImpl, BindGroupLayout>();
 
-        internal BindGroupLayoutImpl Impl;
+        private BindGroupLayoutImpl _impl;
+
+        internal BindGroupLayoutImpl Impl 
+        {
+            get
+            {
+                if (_impl.Handle == IntPtr.Zero)
+                    throw new HandleDroppedOrDestroyedException(nameof(BindGroupLayout));
+
+                return _impl;
+            }
+
+            private set => _impl = value;
+        }
 
         private BindGroupLayout(BindGroupLayoutImpl impl)
         {
@@ -22,5 +35,14 @@ namespace WGPU.NET
 
         internal static BindGroupLayout For(BindGroupLayoutImpl impl)
             => impl.Handle == IntPtr.Zero ? null : instances.GetOrCreate(impl, () => new BindGroupLayout(impl));
+        
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="BindGroupLayout"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            BindGroupLayoutDrop(Impl);
+            Impl = default;
+        }
     }
 }

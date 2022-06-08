@@ -34,7 +34,7 @@ namespace WGPU.NET
             get
             {
                 if (_impl.Handle == IntPtr.Zero)
-                    throw new HandleDestroyedException(nameof(Texture));
+                    throw new HandleDroppedOrDestroyedException(nameof(Texture));
 
                 return _impl;
             }
@@ -57,9 +57,21 @@ namespace WGPU.NET
                 aspect = aspect
             }));
 
-        public void DestroyHandle()
+        /// <summary>
+        /// Destroys the GPU Resource associated to this <see cref="Texture"/>
+        /// </summary>
+        public void DestroyResource()
         {
             TextureDestroy(Impl);
+            Impl = default;
+        }
+        
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="Texture"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            TextureDrop(Impl);
             Impl = default;
         }
     }

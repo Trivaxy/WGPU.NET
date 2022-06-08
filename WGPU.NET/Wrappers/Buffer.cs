@@ -13,7 +13,7 @@ namespace WGPU.NET
             get
             {
                 if (_impl.Handle == IntPtr.Zero)
-                    throw new HandleDestroyedException(nameof(Buffer));
+                    throw new HandleDroppedOrDestroyedException(nameof(Buffer));
 
                 return _impl;
             }
@@ -56,15 +56,28 @@ namespace WGPU.NET
 
         public void Unmap() => BufferUnmap(Impl);
 
-        public void DestroyHandle()
+        /// <summary>
+        /// Destroys the GPU Resource associated to this <see cref="Buffer"/>
+        /// </summary>
+        public void DestroyResource()
         {
             BufferDestroy(Impl);
+            Impl = default;
+        }
+        
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="Buffer"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            BufferDrop(Impl);
+            Impl = default;
         }
     }
 
     public delegate void BufferMapCallback(BufferMapAsyncStatus status);
 
-    public static class BufferExtensions
+    public static partial class BufferExtensions
     {
         public static void SetData<T>(this Buffer buffer, ulong offset, ReadOnlySpan<T> span)
             where T : unmanaged

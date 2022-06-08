@@ -6,7 +6,20 @@ namespace WGPU.NET
 {
     public class ComputePipeline
     {
-        internal ComputePipelineImpl Impl;
+        private ComputePipelineImpl _impl;
+
+        internal ComputePipelineImpl Impl 
+        {
+            get
+            {
+                if (_impl.Handle == IntPtr.Zero)
+                    throw new HandleDroppedOrDestroyedException(nameof(ComputePipeline));
+
+                return _impl;
+            }
+
+            private set => _impl = value;
+        }
 
         internal ComputePipeline(ComputePipelineImpl impl)
         {
@@ -20,11 +33,33 @@ namespace WGPU.NET
             => BindGroupLayout.For(ComputePipelineGetBindGroupLayout(Impl, groupIndex));
 
         public void SetLabel(string label) => ComputePipelineSetLabel(Impl, label);
+        
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="RenderBundle"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            ComputePipelineDrop(Impl);
+            Impl = default;
+        }
     }
 
     public class PipelineLayout
     {
-        internal PipelineLayoutImpl Impl;
+        private PipelineLayoutImpl _impl;
+
+        internal PipelineLayoutImpl Impl 
+        {
+            get
+            {
+                if (_impl.Handle == IntPtr.Zero)
+                    throw new HandleDroppedOrDestroyedException(nameof(PipelineLayout));
+
+                return _impl;
+            }
+
+            private set => _impl = value;
+        }
 
         internal PipelineLayout(PipelineLayoutImpl impl)
         {
@@ -32,6 +67,15 @@ namespace WGPU.NET
                 throw new ResourceCreationError(nameof(PipelineLayout));
 
             Impl = impl;
+        }
+
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="FreeHandle"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            PipelineLayoutDrop(Impl);
+            Impl = default;
         }
     }
 
@@ -52,7 +96,7 @@ namespace WGPU.NET
             get
             {
                 if (_impl.Handle == IntPtr.Zero)
-                    throw new HandleDestroyedException(nameof(QuerySet));
+                    throw new HandleDroppedOrDestroyedException(nameof(QuerySet));
 
                 return _impl;
             }
@@ -60,16 +104,41 @@ namespace WGPU.NET
             private set => _impl = value;
         }
 
-        public void DestroyHandle()
+        /// <summary>
+        /// Destroys the GPU Resource associated to this <see cref="QuerySet"/>
+        /// </summary>
+        public void DestroyResource()
         {
             QuerySetDestroy(Impl);
+            Impl = default;
+        }
+
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="QuerySet"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            QuerySetDrop(Impl);
             Impl = default;
         }
     }
 
     public class RenderPipeline
     {
-        internal RenderPipelineImpl Impl;
+        private RenderPipelineImpl _impl;
+
+        internal RenderPipelineImpl Impl 
+        {
+            get
+            {
+                if (_impl.Handle == IntPtr.Zero)
+                    throw new HandleDroppedOrDestroyedException(nameof(RenderPipeline));
+
+                return _impl;
+            }
+
+            private set => _impl = value;
+        }
 
         internal RenderPipeline(RenderPipelineImpl impl)
         {
@@ -83,11 +152,33 @@ namespace WGPU.NET
             => BindGroupLayout.For(RenderPipelineGetBindGroupLayout(Impl, groupIndex));
 
         public void SetLabel(string label) => RenderPipelineSetLabel(Impl, label);
+
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="RenderPipeline"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            RenderPipelineDrop(Impl);
+            Impl = default;
+        }
     }
 
     public class Sampler
     {
-        internal SamplerImpl Impl;
+        private SamplerImpl _impl;
+
+        internal SamplerImpl Impl 
+        {
+            get
+            {
+                if (_impl.Handle == IntPtr.Zero)
+                    throw new HandleDroppedOrDestroyedException(nameof(Sampler));
+
+                return _impl;
+            }
+
+            private set => _impl = value;
+        }
 
         internal Sampler(SamplerImpl impl)
         {
@@ -96,11 +187,33 @@ namespace WGPU.NET
 
             Impl = impl;
         }
+
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="Sampler"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            SamplerDrop(Impl);
+            Impl = default;
+        }
     }
 
     public class ShaderModule
     {
-        internal ShaderModuleImpl Impl;
+        private ShaderModuleImpl _impl;
+
+        internal ShaderModuleImpl Impl 
+        {
+            get
+            {
+                if (_impl.Handle == IntPtr.Zero)
+                    throw new HandleDroppedOrDestroyedException(nameof(ShaderModule));
+
+                return _impl;
+            }
+
+            private set => _impl = value;
+        }
 
         internal ShaderModule(ShaderModuleImpl impl)
         {
@@ -123,6 +236,15 @@ namespace WGPU.NET
         }
 
         public void SetLabel(string label) => ShaderModuleSetLabel(Impl, label);
+
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="ShaderModule"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            ShaderModuleDrop(Impl);
+            Impl = default;
+        }
     }
 
     public delegate void CompilationInfoCallback(CompilationInfoRequestStatus status,
@@ -130,8 +252,6 @@ namespace WGPU.NET
 
     public class SwapChain
     {
-        
-
         internal SwapChainImpl Impl;
 
         internal SwapChain(SwapChainImpl impl)
@@ -153,7 +273,20 @@ namespace WGPU.NET
 
     public class CommandBuffer
     {
-        internal CommandBufferImpl Impl;
+        private CommandBufferImpl _impl;
+
+        internal CommandBufferImpl Impl 
+        {
+            get
+            {
+                if (_impl.Handle == IntPtr.Zero)
+                    throw new HandleDroppedOrDestroyedException(nameof(CommandBuffer));
+
+                return _impl;
+            }
+
+            private set => _impl = value;
+        }
 
         internal CommandBuffer(CommandBufferImpl impl)
         {
@@ -162,17 +295,48 @@ namespace WGPU.NET
 
             Impl = impl;
         }
+
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="CommandBuffer"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            CommandBufferDrop(Impl);
+            Impl = default;
+        }
     }
 
     public class RenderBundle
     {
-        internal RenderBundleImpl Impl;
+        private RenderBundleImpl _impl;
+
+        internal RenderBundleImpl Impl 
+        {
+            get
+            {
+                if (_impl.Handle == IntPtr.Zero)
+                    throw new HandleDroppedOrDestroyedException(nameof(RenderBundle));
+
+                return _impl;
+            }
+
+            private set => _impl = value;
+        }
 
         internal RenderBundle(RenderBundleImpl impl)
         {
             if (impl.Handle == IntPtr.Zero)
                 throw new ResourceCreationError(nameof(RenderBundle));
             Impl = impl;
+        }
+
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="RenderBundle"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            RenderBundleDrop(Impl);
+            Impl = default;
         }
     }
 }

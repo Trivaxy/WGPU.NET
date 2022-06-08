@@ -42,7 +42,20 @@ namespace WGPU.NET
 
     public class CommandEncoder
     {
-        internal CommandEncoderImpl Impl;
+        private CommandEncoderImpl _impl;
+
+        internal CommandEncoderImpl Impl 
+        {
+            get
+            {
+                if (_impl.Handle == IntPtr.Zero)
+                    throw new HandleDroppedOrDestroyedException(nameof(CommandEncoder));
+
+                return _impl;
+            }
+
+            private set => _impl = value;
+        }
 
         internal CommandEncoder(CommandEncoderImpl impl)
         {
@@ -133,5 +146,14 @@ namespace WGPU.NET
 
         public void WriteTimestamp(QuerySet querySet, uint queryIndex)
             => CommandEncoderWriteTimestamp(Impl, querySet.Impl, queryIndex);
+        
+        /// <summary>
+        /// Signals to the underlying rust API that this <see cref="CommandEncoder"/> isn't used anymore
+        /// </summary>
+        public void FreeHandle()
+        {
+            CommandEncoderDrop(Impl);
+            Impl = default;
+        }
     }
 }
