@@ -21,12 +21,16 @@ namespace WGPU.NET
             private set => _impl = value;
         }
 
-        internal Buffer(BufferImpl impl)
+        public ulong SizeInBytes { get; private set; }
+
+        internal Buffer(BufferImpl impl, in BufferDescriptor descriptor)
         {
             if (impl.Handle == IntPtr.Zero)
                 throw new ResourceCreationError(nameof(Buffer));
 
             Impl = impl;
+
+            SizeInBytes = descriptor.size;
         }
 
         public unsafe Span<T> GetConstMappedRange<T>(ulong offset, int size)

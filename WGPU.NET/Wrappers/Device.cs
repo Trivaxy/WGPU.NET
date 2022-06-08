@@ -117,15 +117,15 @@ namespace WGPU.NET
 
         public Buffer CreateBuffer(string label, bool mappedAtCreation, ulong size, BufferUsage usage)
         {
-            return new Buffer(
-                DeviceCreateBuffer(Impl, new BufferDescriptor
-                {
-                    label = label,
-                    mappedAtCreation = mappedAtCreation,
-                    size = size,
-                    usage = (uint)usage
-                })
-            );
+            var desc = new BufferDescriptor
+            {
+                label = label,
+                mappedAtCreation = mappedAtCreation,
+                size = size,
+                usage = (uint)usage
+            };
+
+            return new Buffer(DeviceCreateBuffer(Impl, desc), desc);
         }
 
         public CommandEncoder CreateCommandEncoder(string label)
@@ -156,14 +156,14 @@ namespace WGPU.NET
         public void CreateComputePipelineAsync(string label, CreateComputePipelineAsyncCallback callback, ProgrammableStageDescriptor compute)
         {
             DeviceCreateComputePipelineAsync(Impl, new ComputePipelineDescriptor
+            {
+                label = label,
+                compute = new Wgpu.ProgrammableStageDescriptor
                 {
-                    label = label,
-                    compute = new Wgpu.ProgrammableStageDescriptor
-                    {
-                        module = compute.Module.Impl,
-                        entryPoint = compute.EntryPoint
-                    }
-                }, (s,p,m,_) => callback(s, new ComputePipeline(p),m), IntPtr.Zero
+                    module = compute.Module.Impl,
+                    entryPoint = compute.EntryPoint
+                }
+            }, (s, p, m, _) => callback(s, new ComputePipeline(p), m), IntPtr.Zero
             );
         }
 
@@ -177,7 +177,7 @@ namespace WGPU.NET
                     label = label,
                     bindGroupLayouts = Util.AllocHArray(
                         bindGroupLayouts.Length,
-                        bindGroupLayouts.Select(x=>x.Impl)),
+                        bindGroupLayouts.Select(x => x.Impl)),
 
                     bindGroupLayoutCount = (uint)bindGroupLayouts.Length
                 })
@@ -216,7 +216,7 @@ namespace WGPU.NET
         }
 
         public RenderPipeline CreateRenderPipeline(string label, PipelineLayout layout,
-            VertexState vertexState, PrimitiveState primitiveState, MultisampleState multisampleState, 
+            VertexState vertexState, PrimitiveState primitiveState, MultisampleState multisampleState,
             DepthStencilState? depthStencilState = null, FragmentState? fragmentState = null)
         {
             RenderPipelineDescriptor desc = CreateRenderPipelineDescriptor(label, layout, vertexState, primitiveState, multisampleState, depthStencilState, fragmentState);
@@ -225,18 +225,18 @@ namespace WGPU.NET
         }
 
         public void CreateRenderPipelineAsync(string label, CreateRenderPipelineAsyncCallback callback, PipelineLayout layout,
-            VertexState vertexState, PrimitiveState primitiveState, MultisampleState multisampleState, 
+            VertexState vertexState, PrimitiveState primitiveState, MultisampleState multisampleState,
             DepthStencilState? depthStencilState = null, FragmentState? fragmentState = null)
         {
             RenderPipelineDescriptor desc = CreateRenderPipelineDescriptor(label, layout, vertexState, primitiveState, multisampleState, depthStencilState, fragmentState);
 
-            DeviceCreateRenderPipelineAsync(Impl, desc, (s,p,m,_) => callback(s, new RenderPipeline(p), m), IntPtr.Zero);
+            DeviceCreateRenderPipelineAsync(Impl, desc, (s, p, m, _) => callback(s, new RenderPipeline(p), m), IntPtr.Zero);
         }
 
         public delegate void CreateRenderPipelineAsyncCallback(CreatePipelineAsyncStatus status, RenderPipeline pipeline, string message);
 
-        private static RenderPipelineDescriptor CreateRenderPipelineDescriptor(string label, PipelineLayout layout, VertexState vertexState, 
-            PrimitiveState primitiveState, MultisampleState multisampleState, DepthStencilState? depthStencilState, 
+        private static RenderPipelineDescriptor CreateRenderPipelineDescriptor(string label, PipelineLayout layout, VertexState vertexState,
+            PrimitiveState primitiveState, MultisampleState multisampleState, DepthStencilState? depthStencilState,
             FragmentState? fragmentState)
         {
             return new RenderPipelineDescriptor
@@ -279,7 +279,7 @@ namespace WGPU.NET
         }
 
         public Sampler CreateSampler(string label, AddressMode addressModeU, AddressMode addressModeV, AddressMode addressModeW,
-            FilterMode magFilter, FilterMode minFilter, MipmapFilterMode mipmapFilter, 
+            FilterMode magFilter, FilterMode minFilter, MipmapFilterMode mipmapFilter,
             float lodMinClamp, float lodMaxClamp, CompareFunction compare, ushort maxAnisotropy)
         {
             return new Sampler(
@@ -409,7 +409,7 @@ namespace WGPU.NET
                 IntPtr.Zero);
         }
 
-        private static readonly List<Wgpu.ErrorCallback> s_errorCallbacks = 
+        private static readonly List<Wgpu.ErrorCallback> s_errorCallbacks =
             new List<Wgpu.ErrorCallback>();
 
         public void SetUncapturedErrorCallback(ErrorCallback callback)
@@ -433,7 +433,7 @@ namespace WGPU.NET
             DeviceDestroy(Impl);
             Impl = default;
         }
-        
+
         /// <summary>
         /// Signals to the underlying rust API that this <see cref="Device"/> isn't used anymore
         /// </summary>
