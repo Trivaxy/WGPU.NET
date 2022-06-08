@@ -17,6 +17,27 @@ namespace WGPU.NET
         public Color clearValue;
     }
 
+    public partial struct RenderPassDepthStencilAttachment
+    {
+        public TextureView View;
+
+        public LoadOp DepthLoadOp;
+
+        public StoreOp DepthStoreOp;
+
+        public float DepthClearValue;
+
+        public bool DepthReadOnly;
+
+        public LoadOp StencilLoadOp;
+
+        public StoreOp StencilStoreOp;
+
+        public uint StencilClearValue;
+
+        public bool StencilReadOnly;
+    }
+
     public partial struct ImageCopyTexture
     {
         public Texture Texture;
@@ -96,7 +117,18 @@ namespace WGPU.NET
                         })
                     ),
                     colorAttachmentCount = (uint)colorAttachments.Length,
-                    depthStencilAttachment = Util.Optional(depthStencilAttachment)
+                    depthStencilAttachment = depthStencilAttachment==null ? IntPtr.Zero :
+                    Util.AllocHStruct(new Wgpu.RenderPassDepthStencilAttachment{
+                        view = depthStencilAttachment.Value.View.Impl,
+                        depthLoadOp = depthStencilAttachment.Value.DepthLoadOp,
+                        depthStoreOp = depthStencilAttachment.Value.DepthStoreOp,
+                        depthClearValue = depthStencilAttachment.Value.DepthClearValue,
+                        depthReadOnly = depthStencilAttachment.Value.DepthReadOnly,
+                        stencilLoadOp = depthStencilAttachment.Value.StencilLoadOp,
+                        stencilStoreOp = depthStencilAttachment.Value.StencilStoreOp,
+                        stencilClearValue = depthStencilAttachment.Value.StencilClearValue,
+                        stencilReadOnly = depthStencilAttachment.Value.StencilReadOnly
+                    })
                 })
             );
         }

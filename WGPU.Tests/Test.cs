@@ -140,23 +140,23 @@ namespace WGPU.Tests
 
 			var uniformBuffer = device.CreateBuffer("UniformBuffer", false, (ulong)sizeof(UniformBuffer), Wgpu.BufferUsage.Uniform | Wgpu.BufferUsage.CopyDst);
 
-            
 
-			var image = Image.Load<Rgba32>(Path.Combine("Resources","WGPU-Logo.png"));
 
-			var imageSize = new Wgpu.Extent3D 
-			{ 
-				width = (uint)image.Width, 
-				height = (uint)image.Height, 
-				depthOrArrayLayers = 1 
+			var image = Image.Load<Rgba32>(Path.Combine("Resources", "WGPU-Logo.png"));
+
+			var imageSize = new Wgpu.Extent3D
+			{
+				width = (uint)image.Width,
+				height = (uint)image.Height,
+				depthOrArrayLayers = 1
 			};
 
-			var imageTexture = device.CreateTexture("Image", 
-				usage: Wgpu.TextureUsage.TextureBinding | Wgpu.TextureUsage.CopyDst, 
+			var imageTexture = device.CreateTexture("Image",
+				usage: Wgpu.TextureUsage.TextureBinding | Wgpu.TextureUsage.CopyDst,
 				dimension: Wgpu.TextureDimension.TwoDimensions,
 				size: imageSize,
-				format: Wgpu.TextureFormat.RGBA8Unorm, 
-				mipLevelCount: 1, 
+				format: Wgpu.TextureFormat.RGBA8Unorm,
+				mipLevelCount: 1,
 				sampleCount: 1
 			);
 
@@ -173,7 +173,7 @@ namespace WGPU.Tests
 						Origin = default,
 						Texture = imageTexture
 					},
-					data: pixels, 
+					data: pixels,
 					dataLayout: new Wgpu.TextureDataLayout
 					{
 						bytesPerRow = (uint)(sizeof(Rgba32) * image.Width),
@@ -199,36 +199,36 @@ namespace WGPU.Tests
 
 				maxAnisotropy: 1
 			);
-			
+
 
 
 			var bindGroupLayout = device.CreateBindgroupLayout(null, new Wgpu.BindGroupLayoutEntry[] {
 				new Wgpu.BindGroupLayoutEntry
-                {
+				{
 					binding = 0,
 					buffer = new Wgpu.BufferBindingLayout
-                    {
+					{
 						type = Wgpu.BufferBindingType.Uniform,
-                    },
+					},
 					visibility = (uint)Wgpu.ShaderStage.Vertex
-                },
+				},
 				new Wgpu.BindGroupLayoutEntry
 				{
 					binding = 1,
 					sampler = new Wgpu.SamplerBindingLayout
-                    {
+					{
 						type = Wgpu.SamplerBindingType.Filtering
-                    },
+					},
 					visibility = (uint)Wgpu.ShaderStage.Fragment
 				},
 				new Wgpu.BindGroupLayoutEntry
 				{
 					binding = 2,
 					texture = new Wgpu.TextureBindingLayout
-                    {
+					{
 						viewDimension = Wgpu.TextureViewDimension.TwoDimensions,
 						sampleType = Wgpu.TextureSampleType.Float
-                    },
+					},
 					visibility = (uint)Wgpu.ShaderStage.Fragment
 				}
 			});
@@ -236,10 +236,10 @@ namespace WGPU.Tests
 			var bindGroup = device.CreateBindGroup(null, bindGroupLayout, new BindGroupEntry[]
 			{
 				new BindGroupEntry
-                {
+				{
 					Binding = 0,
 					Buffer = uniformBuffer
-                },
+				},
 				new BindGroupEntry
 				{
 					Binding = 1,
@@ -262,9 +262,9 @@ namespace WGPU.Tests
 			var pipelineLayout = device.CreatePipelineLayout(
 				label: null,
 				new BindGroupLayout[]
-                {
+				{
 					bindGroupLayout
-                }
+				}
 			);
 
 
@@ -274,19 +274,19 @@ namespace WGPU.Tests
 				Module = shader,
 				EntryPoint = "vs_main",
 				bufferLayouts = new VertexBufferLayout[]
-                {
+				{
 					new VertexBufferLayout
-                    {
+					{
 						ArrayStride = (ulong)sizeof(Vertex),
 						Attributes = new Wgpu.VertexAttribute[]
-                        {
+						{
 							//position
 							new Wgpu.VertexAttribute
-                            {
+							{
 								format = Wgpu.VertexFormat.Float32x3,
 								offset = 0,
 								shaderLocation = 0
-                            },
+							},
 							//color
 							new Wgpu.VertexAttribute
 							{
@@ -302,39 +302,41 @@ namespace WGPU.Tests
 								shaderLocation = 2
 							}
 						}
-                    }
-                }
+					}
+				}
 			};
 
 			var swapChainFormat = surface.GetPreferredFormat(adapter);
+
+			var colorTargets = new ColorTargetState[]
+			{
+				new ColorTargetState()
+				{
+					Format = swapChainFormat,
+					BlendState = new Wgpu.BlendState()
+					{
+						color = new Wgpu.BlendComponent()
+						{
+							srcFactor = Wgpu.BlendFactor.One,
+							dstFactor = Wgpu.BlendFactor.Zero,
+							operation = Wgpu.BlendOperation.Add
+						},
+						alpha = new Wgpu.BlendComponent()
+						{
+							srcFactor = Wgpu.BlendFactor.One,
+							dstFactor = Wgpu.BlendFactor.Zero,
+							operation = Wgpu.BlendOperation.Add
+						}
+					},
+					WriteMask = (uint)Wgpu.ColorWriteMask.All
+				}
+			};
 
 			var fragmentState = new FragmentState()
 			{
 				Module = shader,
 				EntryPoint = "fs_main",
-				colorTargets = new ColorTargetState[]
-				{
-					new ColorTargetState()
-					{
-						Format = swapChainFormat,
-						BlendState = new Wgpu.BlendState()
-						{
-							color = new Wgpu.BlendComponent()
-							{
-								srcFactor = Wgpu.BlendFactor.One,
-								dstFactor = Wgpu.BlendFactor.Zero,
-								operation = Wgpu.BlendOperation.Add
-							},
-							alpha = new Wgpu.BlendComponent()
-							{
-								srcFactor = Wgpu.BlendFactor.One,
-								dstFactor = Wgpu.BlendFactor.Zero,
-								operation = Wgpu.BlendOperation.Add
-							}
-						},
-						WriteMask = (uint)Wgpu.ColorWriteMask.All
-					}
-				}
+				colorTargets = colorTargets
 			};
 
 			var renderPipeline = device.CreateRenderPipeline(
@@ -354,11 +356,34 @@ namespace WGPU.Tests
 					mask = uint.MaxValue,
 					alphaToCoverageEnabled = false
 				},
+				depthStencilState: new Wgpu.DepthStencilState()
+				{
+					format = Wgpu.TextureFormat.Depth32Float,
+					depthCompare = Wgpu.CompareFunction.Always,
+					stencilBack = new Wgpu.StencilFaceState
+					{
+						depthFailOp = Wgpu.StencilOperation.Keep,
+						failOp = Wgpu.StencilOperation.Keep,
+						passOp = Wgpu.StencilOperation.Keep,
+						compare = Wgpu.CompareFunction.Always
+					},
+					stencilFront = new Wgpu.StencilFaceState
+					{
+						depthFailOp = Wgpu.StencilOperation.Keep,
+						failOp = Wgpu.StencilOperation.Keep,
+						passOp = Wgpu.StencilOperation.Keep,
+						compare = Wgpu.CompareFunction.Always
+					}
+
+				},
 				fragmentState: fragmentState
 			);
 
-			glfw.GetWindowSize(window, out int prevWidth, out int prevHeight);
 
+
+
+
+			glfw.GetWindowSize(window, out int prevWidth, out int prevHeight);
 
 			var swapChainDescriptor = new Wgpu.SwapChainDescriptor
 			{
@@ -371,20 +396,64 @@ namespace WGPU.Tests
 
 			var swapChain = device.CreateSwapChain(surface, swapChainDescriptor);
 
+			var depthTextureDescriptor = new Wgpu.TextureDescriptor
+			{
+				label = "Depth Buffer",
+				usage = (uint)Wgpu.TextureUsage.RenderAttachment,
+				dimension = Wgpu.TextureDimension.TwoDimensions,
+				size = new Wgpu.Extent3D
+                {
+					width = (uint)prevWidth,
+					height = (uint)prevHeight,
+					depthOrArrayLayers = 1
+                },
+				format = Wgpu.TextureFormat.Depth32Float,
+				mipLevelCount = 1,
+				sampleCount = 1
+            };
 
-			var isReady = new AutoResetEvent(false);
+			var depthTexture = device.CreateTexture(in depthTextureDescriptor);
+			var depthTextureView = depthTexture.CreateTextureView();
+
 
 			Span<UniformBuffer> uniformBufferSpan = stackalloc UniformBuffer[1];
 
 			var startTime = DateTime.Now;
 
+			var lastFrameTime = startTime;
+
 			while (!glfw.WindowShouldClose(window))
 			{
-				TimeSpan duration = DateTime.Now - startTime;
-
-
 				glfw.GetCursorPos(window, out double mouseX, out double mouseY);
+				glfw.GetWindowSize(window, out int width, out int height);
 
+				if ((width != prevWidth || height != prevHeight) && width != 0 && height != 0)
+				{
+					prevWidth = width;
+					prevHeight = height;
+					swapChainDescriptor.width = (uint)width;
+					swapChainDescriptor.height = (uint)height;
+
+					depthTextureDescriptor.size.width = (uint)width;
+					depthTextureDescriptor.size.height = (uint)height;
+
+					swapChain = device.CreateSwapChain(surface, swapChainDescriptor);
+
+					depthTexture.DestroyResource();
+					depthTexture = device.CreateTexture(depthTextureDescriptor);
+					depthTextureView = depthTexture.CreateTextureView();
+				}
+
+
+
+				var currentTime = DateTime.Now;
+
+				TimeSpan duration = currentTime - startTime;
+
+
+				
+
+				
 				Vector2 nrmMouseCoords = new Vector2(
 					(float)(mouseX * 1 - prevWidth  * 0.5f) / prevWidth,
 				    (float)(mouseY * 1 - prevHeight * 0.5f) / prevHeight
@@ -407,16 +476,7 @@ namespace WGPU.Tests
 				uniformBufferData.Transform *= CreatePerspective(MathF.PI/4f, (float)prevWidth/prevHeight, 0.01f, 1000);
 
 
-				glfw.GetWindowSize(window, out int width, out int height);
-
-				if ((width != prevWidth || height != prevHeight) && width != 0 && height != 0 )
-				{
-					prevWidth = width;
-					prevHeight = height;
-					swapChainDescriptor.width = (uint)width;
-					swapChainDescriptor.height = (uint)height;
-					swapChain = device.CreateSwapChain(surface, swapChainDescriptor);
-				}
+				
 
 				var nextTexture = swapChain.GetCurrentTextureView();
 
@@ -441,7 +501,15 @@ namespace WGPU.Tests
 						clearValue = new Wgpu.Color() { r = 0, g = 0.02f, b = 0.1f, a = 1 }
 					}
 					},
-					depthStencilAttachment: null
+					depthStencilAttachment: new RenderPassDepthStencilAttachment
+                    {
+						View = depthTextureView,
+						DepthLoadOp = Wgpu.LoadOp.Clear,
+						DepthStoreOp = Wgpu.StoreOp.Store,
+						DepthClearValue = 0f,
+						StencilLoadOp = Wgpu.LoadOp.Clear,
+						StencilStoreOp = Wgpu.StoreOp.Discard
+                    }
 				);
 
 				renderPass.SetPipeline(renderPipeline);

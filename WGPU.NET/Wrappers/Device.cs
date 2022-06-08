@@ -156,14 +156,14 @@ namespace WGPU.NET
         public void CreateComputePipelineAsync(string label, CreateComputePipelineAsyncCallback callback, ProgrammableStageDescriptor compute)
         {
             DeviceCreateComputePipelineAsync(Impl, new ComputePipelineDescriptor
-            {
-                label = label,
-                compute = new Wgpu.ProgrammableStageDescriptor
                 {
-                    module = compute.Module.Impl,
-                    entryPoint = compute.EntryPoint
-                }
-            }, (s, p, m, _) => callback(s, new ComputePipeline(p), m), IntPtr.Zero
+                    label = label,
+                    compute = new Wgpu.ProgrammableStageDescriptor
+                    {
+                        module = compute.Module.Impl,
+                        entryPoint = compute.EntryPoint
+                    }
+                }, (s, p, m, _) => callback(s, new ComputePipeline(p), m), IntPtr.Zero
             );
         }
 
@@ -216,7 +216,7 @@ namespace WGPU.NET
         }
 
         public RenderPipeline CreateRenderPipeline(string label, PipelineLayout layout,
-            VertexState vertexState, PrimitiveState primitiveState, MultisampleState multisampleState,
+            VertexState vertexState, PrimitiveState primitiveState, MultisampleState multisampleState, 
             DepthStencilState? depthStencilState = null, FragmentState? fragmentState = null)
         {
             RenderPipelineDescriptor desc = CreateRenderPipelineDescriptor(label, layout, vertexState, primitiveState, multisampleState, depthStencilState, fragmentState);
@@ -225,7 +225,7 @@ namespace WGPU.NET
         }
 
         public void CreateRenderPipelineAsync(string label, CreateRenderPipelineAsyncCallback callback, PipelineLayout layout,
-            VertexState vertexState, PrimitiveState primitiveState, MultisampleState multisampleState,
+            VertexState vertexState, PrimitiveState primitiveState, MultisampleState multisampleState, 
             DepthStencilState? depthStencilState = null, FragmentState? fragmentState = null)
         {
             RenderPipelineDescriptor desc = CreateRenderPipelineDescriptor(label, layout, vertexState, primitiveState, multisampleState, depthStencilState, fragmentState);
@@ -235,8 +235,8 @@ namespace WGPU.NET
 
         public delegate void CreateRenderPipelineAsyncCallback(CreatePipelineAsyncStatus status, RenderPipeline pipeline, string message);
 
-        private static RenderPipelineDescriptor CreateRenderPipelineDescriptor(string label, PipelineLayout layout, VertexState vertexState,
-            PrimitiveState primitiveState, MultisampleState multisampleState, DepthStencilState? depthStencilState,
+        private static RenderPipelineDescriptor CreateRenderPipelineDescriptor(string label, PipelineLayout layout, VertexState vertexState, 
+            PrimitiveState primitiveState, MultisampleState multisampleState, DepthStencilState? depthStencilState, 
             FragmentState? fragmentState)
         {
             return new RenderPipelineDescriptor
@@ -279,7 +279,7 @@ namespace WGPU.NET
         }
 
         public Sampler CreateSampler(string label, AddressMode addressModeU, AddressMode addressModeV, AddressMode addressModeW,
-            FilterMode magFilter, FilterMode minFilter, MipmapFilterMode mipmapFilter,
+            FilterMode magFilter, FilterMode minFilter, MipmapFilterMode mipmapFilter, 
             float lodMinClamp, float lodMaxClamp, CompareFunction compare, ushort maxAnisotropy)
         {
             return new Sampler(
@@ -343,10 +343,10 @@ namespace WGPU.NET
             );
         }
 
-        public SwapChain CreateSwapChain(Surface surface, SwapChainDescriptor swapChainDescriptor)
+        public SwapChain CreateSwapChain(Surface surface, in SwapChainDescriptor descriptor)
         {
             return new SwapChain(
-                DeviceCreateSwapChain(Impl, surface.Impl, swapChainDescriptor)
+                DeviceCreateSwapChain(Impl, surface.Impl, descriptor)
             );
         }
 
@@ -365,7 +365,12 @@ namespace WGPU.NET
                 sampleCount = sampleCount,
             };
 
-            return new Texture(DeviceCreateTexture(Impl, desc), desc);
+            return CreateTexture(in desc);
+        }
+
+        public Texture CreateTexture(in TextureDescriptor descriptor)
+        {
+            return new Texture(DeviceCreateTexture(Impl, descriptor), descriptor);
         }
 
         public unsafe FeatureName[] EnumerateFeatures()
@@ -409,7 +414,7 @@ namespace WGPU.NET
                 IntPtr.Zero);
         }
 
-        private static readonly List<Wgpu.ErrorCallback> s_errorCallbacks =
+        private static readonly List<Wgpu.ErrorCallback> s_errorCallbacks = 
             new List<Wgpu.ErrorCallback>();
 
         public void SetUncapturedErrorCallback(ErrorCallback callback)
@@ -433,7 +438,7 @@ namespace WGPU.NET
             DeviceDestroy(Impl);
             Impl = default;
         }
-
+        
         /// <summary>
         /// Signals to the underlying rust API that this <see cref="Device"/> isn't used anymore
         /// </summary>
