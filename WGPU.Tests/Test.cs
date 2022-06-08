@@ -248,15 +248,7 @@ namespace WGPU.Tests
 				new BindGroupEntry
 				{
 					Binding = 2,
-					TextureView = imageTexture.CreateTextureView("ImageTextureView", 
-						format: Wgpu.TextureFormat.RGBA8Unorm, 
-						dimension: Wgpu.TextureViewDimension.TwoDimensions,
-						baseMipLevel: 0,
-						mipLevelCount: 1,
-						baseArrayLayer: 0,
-						arrayLayerCount: 1,
-						aspect: Wgpu.TextureAspect.All
-					)
+					TextureView = imageTexture.CreateTextureView()
 				}
 			});
 
@@ -322,26 +314,26 @@ namespace WGPU.Tests
 				EntryPoint = "fs_main",
 				colorTargets = new ColorTargetState[]
 				{
-				new ColorTargetState()
-				{
-					Format = swapChainFormat,
-					BlendState = new Wgpu.BlendState()
+					new ColorTargetState()
 					{
-						color = new Wgpu.BlendComponent()
+						Format = swapChainFormat,
+						BlendState = new Wgpu.BlendState()
 						{
-							srcFactor = Wgpu.BlendFactor.One,
-							dstFactor = Wgpu.BlendFactor.Zero,
-							operation = Wgpu.BlendOperation.Add
+							color = new Wgpu.BlendComponent()
+							{
+								srcFactor = Wgpu.BlendFactor.One,
+								dstFactor = Wgpu.BlendFactor.Zero,
+								operation = Wgpu.BlendOperation.Add
+							},
+							alpha = new Wgpu.BlendComponent()
+							{
+								srcFactor = Wgpu.BlendFactor.One,
+								dstFactor = Wgpu.BlendFactor.Zero,
+								operation = Wgpu.BlendOperation.Add
+							}
 						},
-						alpha = new Wgpu.BlendComponent()
-						{
-							srcFactor = Wgpu.BlendFactor.One,
-							dstFactor = Wgpu.BlendFactor.Zero,
-							operation = Wgpu.BlendOperation.Add
-						}
-					},
-					WriteMask = (uint)Wgpu.ColorWriteMask.All
-				}
+						WriteMask = (uint)Wgpu.ColorWriteMask.All
+					}
 				}
 			};
 
