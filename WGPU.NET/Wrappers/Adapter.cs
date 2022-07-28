@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
@@ -72,7 +70,7 @@ namespace WGPU.NET
                 requiredLimits = Util.Optional(limits),
                 nextInChain = deviceExtras==null ? IntPtr.Zero :
                 new WgpuStructChain()
-                .Add_DeviceExtras(
+                .AddDeviceExtras(
                     deviceExtras.Value.NativeFeatures, 
                     deviceExtras.Value.Label, 
                     deviceExtras.Value.TracePath)

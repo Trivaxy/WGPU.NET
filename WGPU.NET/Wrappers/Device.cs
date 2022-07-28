@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
@@ -307,7 +305,7 @@ namespace WGPU.NET
                 {
                     label = label,
                     nextInChain = new WgpuStructChain()
-                    .Add_ShaderModuleSPIRVDescriptor(spirvCode)
+                    .AddShaderModuleSPIRVDescriptor(spirvCode)
                     .GetPointer()
                 })
             );
@@ -320,7 +318,7 @@ namespace WGPU.NET
                 {
                     label = label,
                     nextInChain = new WgpuStructChain()
-                    .Add_ShaderModuleWGSLDescriptor(wgslCode)
+                    .AddShaderModuleWGSLDescriptor(wgslCode)
                     .GetPointer()
                 })
             );

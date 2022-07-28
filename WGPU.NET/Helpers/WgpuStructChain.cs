@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using WGPU.NET;
 
 namespace WGPU.NET
 {
@@ -15,7 +14,7 @@ namespace WGPU.NET
             return _pointer;
         }
 
-        public WgpuStructChain Add_PrimitiveDepthClipControl(bool unclippedDepth = default)
+        public WgpuStructChain AddPrimitiveDepthClipControl(bool unclippedDepth = default)
         {
 			AddStruct(new Wgpu.PrimitiveDepthClipControl()
 			{
@@ -26,7 +25,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_ShaderModuleSPIRVDescriptor(byte[] code)
+		public WgpuStructChain AddShaderModuleSPIRVDescriptor(byte[] code)
 		{
 			AddStruct(new Wgpu.ShaderModuleSPIRVDescriptor()
 			{
@@ -38,7 +37,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_ShaderModuleWGSLDescriptor(string code)
+		public WgpuStructChain AddShaderModuleWGSLDescriptor(string code)
 		{
 			AddStruct(new Wgpu.ShaderModuleWGSLDescriptor()
 			{
@@ -49,7 +48,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_SurfaceDescriptorFromAndroidNativeWindow(IntPtr window = default)
+		public WgpuStructChain AddSurfaceDescriptorFromAndroidNativeWindow(IntPtr window = default)
         {
 			AddStruct(new Wgpu.SurfaceDescriptorFromAndroidNativeWindow()
 			{
@@ -60,7 +59,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_SurfaceDescriptorFromCanvasHTMLSelector(string selector = default)
+		public WgpuStructChain AddSurfaceDescriptorFromCanvasHTMLSelector(string selector = default)
 		{
 			AddStruct(new Wgpu.SurfaceDescriptorFromCanvasHTMLSelector()
 			{
@@ -71,7 +70,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_SurfaceDescriptorFromMetalLayer(IntPtr layer = default)
+		public WgpuStructChain AddSurfaceDescriptorFromMetalLayer(IntPtr layer = default)
 		{
 			AddStruct(new Wgpu.SurfaceDescriptorFromMetalLayer()
 			{
@@ -82,7 +81,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_SurfaceDescriptorFromWaylandSurface(IntPtr display = default, IntPtr surface = default)
+		public WgpuStructChain AddSurfaceDescriptorFromWaylandSurface(IntPtr display = default, IntPtr surface = default)
 		{
 			AddStruct(new Wgpu.SurfaceDescriptorFromWaylandSurface()
 			{
@@ -94,7 +93,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_SurfaceDescriptorFromWindowsHWND(IntPtr hinstance = default, IntPtr hwnd = default)
+		public WgpuStructChain AddSurfaceDescriptorFromWindowsHWND(IntPtr hinstance = default, IntPtr hwnd = default)
 		{
 			AddStruct(new Wgpu.SurfaceDescriptorFromWindowsHWND()
 			{
@@ -106,7 +105,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_SurfaceDescriptorFromXcbWindow(IntPtr connection = default, uint window = default)
+		public WgpuStructChain AddSurfaceDescriptorFromXcbWindow(IntPtr connection = default, uint window = default)
 		{
 			AddStruct(new Wgpu.SurfaceDescriptorFromXcbWindow()
 			{
@@ -118,7 +117,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_SurfaceDescriptorFromXlibWindow(IntPtr display = default, uint window = default)
+		public WgpuStructChain AddSurfaceDescriptorFromXlibWindow(IntPtr display = default, uint window = default)
 		{
 			AddStruct(new Wgpu.SurfaceDescriptorFromXlibWindow()
 			{
@@ -130,7 +129,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_AdapterExtras(Wgpu.BackendType backend = default)
+		public WgpuStructChain AddAdapterExtras(Wgpu.BackendType backend = default)
 		{
 			AddStruct(new Wgpu.AdapterExtras()
 			{
@@ -141,7 +140,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_DeviceExtras(Wgpu.NativeFeature nativeFeatures = default, string label = default, string tracePath = default)
+		public WgpuStructChain AddDeviceExtras(Wgpu.NativeFeature nativeFeatures = default, string label = default, string tracePath = default)
 		{
 			AddStruct(new Wgpu.DeviceExtras()
 			{
@@ -154,7 +153,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_RequiredLimitsExtras(uint maxPushConstantSize = default)
+		public WgpuStructChain AddRequiredLimitsExtras(uint maxPushConstantSize = default)
 		{
 			AddStruct(new Wgpu.RequiredLimitsExtras()
 			{
@@ -165,7 +164,7 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain Add_PipelineLayoutExtras(Wgpu.PushConstantRange[] pushConstantRanges)
+		public WgpuStructChain AddPipelineLayoutExtras(Wgpu.PushConstantRange[] pushConstantRanges)
 		{
 			AddStruct(new Wgpu.PipelineLayoutExtras()
 			{
@@ -176,10 +175,6 @@ namespace WGPU.NET
 
 			return this;
 		}
-
-
-
-
 
 		private void AddStruct<T>(T structure)
 			where T : struct

@@ -9,14 +9,18 @@ namespace WGPU.NET
 
         private TextureDescriptor _descriptor;
 
-
-
         public string Label => _descriptor.label;
+
         public uint Usage => _descriptor.usage;
+
         public TextureDimension Dimension => _descriptor.dimension;
+
         public Extent3D Size => _descriptor.size;
+
         public TextureFormat Format => _descriptor.format;
+
         public uint MipLevelCount => _descriptor.mipLevelCount;
+
         public uint SampleCount => _descriptor.sampleCount;
 
         internal Texture(TextureImpl impl, TextureDescriptor descriptor)
@@ -58,7 +62,7 @@ namespace WGPU.NET
             }));
 
         /// <summary>
-        /// Destroys the GPU Resource associated to this <see cref="Texture"/>
+        /// Destroys the GPU Resource associated with this <see cref="Texture"/>
         /// </summary>
         public void DestroyResource()
         {

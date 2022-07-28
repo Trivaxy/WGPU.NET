@@ -8,43 +8,43 @@ namespace WGPU.NET
 {
     public class RenderPassEncoder
     {
-        internal RenderPassEncoderImpl Impl;
+        private RenderPassEncoderImpl _impl;
 
         internal RenderPassEncoder(RenderPassEncoderImpl impl)
         {
             if (impl.Handle == IntPtr.Zero)
                 throw new ResourceCreationError(nameof(RenderPassEncoder));
 
-            Impl = impl;
+            _impl = impl;
         }
 
         public void BeginOcclusionQuery(uint queryIndex)
-            => RenderPassEncoderBeginOcclusionQuery(Impl, queryIndex);
+            => RenderPassEncoderBeginOcclusionQuery(_impl, queryIndex);
 
         public void BeginPipelineStatisticsQuery(QuerySet querySet, uint queryIndex)
-            => RenderPassEncoderBeginPipelineStatisticsQuery(Impl, querySet.Impl, queryIndex);
+            => RenderPassEncoderBeginPipelineStatisticsQuery(_impl, querySet.Impl, queryIndex);
 
         public void Draw(uint vertexCount, uint instanceCount, uint firstVertex, uint firstInstance)
-            => RenderPassEncoderDraw(Impl, vertexCount, instanceCount, firstVertex, firstInstance);
+            => RenderPassEncoderDraw(_impl, vertexCount, instanceCount, firstVertex, firstInstance);
 
         public void DrawIndexed(uint indexCount, uint instanceCount, uint firstIndex, int baseVertex, uint firstInstance)
-            => RenderPassEncoderDrawIndexed(Impl, indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
+            => RenderPassEncoderDrawIndexed(_impl, indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
 
         public void DrawIndexedIndirect(Buffer indirectBuffer, ulong indirectOffset)
-            => RenderPassEncoderDrawIndexedIndirect(Impl, indirectBuffer.Impl, indirectOffset);
+            => RenderPassEncoderDrawIndexedIndirect(_impl, indirectBuffer.Impl, indirectOffset);
 
         public void DrawIndirect(Buffer indirectBuffer, ulong indirectOffset)
-            => RenderPassEncoderDrawIndirect(Impl, indirectBuffer.Impl, indirectOffset);
+            => RenderPassEncoderDrawIndirect(_impl, indirectBuffer.Impl, indirectOffset);
 
-        public void End() => RenderPassEncoderEnd(Impl);
+        public void End() => RenderPassEncoderEnd(_impl);
 
-        public void EndOcclusionQuery() => RenderPassEncoderEndOcclusionQuery(Impl);
+        public void EndOcclusionQuery() => RenderPassEncoderEndOcclusionQuery(_impl);
 
-        public void EndPipelineStatisticsQuery() => RenderPassEncoderEndPipelineStatisticsQuery(Impl);
+        public void EndPipelineStatisticsQuery() => RenderPassEncoderEndPipelineStatisticsQuery(_impl);
 
         public unsafe void ExecuteBundles(RenderBundle[] bundles)
         {
-            RenderPassEncoderExecuteBundles(Impl, (uint)bundles.Length,
+            RenderPassEncoderExecuteBundles(_impl, (uint)bundles.Length,
                 ref Unsafe.AsRef<RenderBundleImpl>(
                     (void*)Util.AllocHArray(bundles.Length, bundles.Select(x => x.Impl))
                 )
@@ -52,47 +52,47 @@ namespace WGPU.NET
         }
 
         public void InsertDebugMarker(string markerLabel)
-            => RenderPassEncoderInsertDebugMarker(Impl, markerLabel);
+            => RenderPassEncoderInsertDebugMarker(_impl, markerLabel);
 
         public void PushDebugGroup(string groupLabel)
-            => RenderPassEncoderPushDebugGroup(Impl, groupLabel);
+            => RenderPassEncoderPushDebugGroup(_impl, groupLabel);
 
-        public void PopDebugGroup(string groupLabel) => RenderPassEncoderPopDebugGroup(Impl);
+        public void PopDebugGroup(string groupLabel) => RenderPassEncoderPopDebugGroup(_impl);
 
         public unsafe void SetBindGroup(uint groupIndex, BindGroup group, uint[] dynamicOffsets)
         {
-            RenderPassEncoderSetBindGroup(Impl, groupIndex,
+            RenderPassEncoderSetBindGroup(_impl, groupIndex,
                 group.Impl,
                 (uint)dynamicOffsets.Length,
                 ref Unsafe.AsRef<uint>((void*)Util.AllocHArray(dynamicOffsets))
             );
         }
 
-        public void SetBlendConstant(in Color color) => RenderPassEncoderSetBlendConstant(Impl, color);
+        public void SetBlendConstant(in Color color) => RenderPassEncoderSetBlendConstant(_impl, color);
 
         public void SetIndexBuffer(Buffer buffer, IndexFormat format, ulong offset, ulong size)
-            => RenderPassEncoderSetIndexBuffer(Impl, buffer.Impl, format, offset, size);
+            => RenderPassEncoderSetIndexBuffer(_impl, buffer.Impl, format, offset, size);
 
-        public void SetPipeline(RenderPipeline pipeline) => RenderPassEncoderSetPipeline(Impl, pipeline.Impl);
+        public void SetPipeline(RenderPipeline pipeline) => RenderPassEncoderSetPipeline(_impl, pipeline.Impl);
 
         public unsafe void SetPushConstants<T>(ShaderStage stages, uint offset, ReadOnlySpan<T> data)
             where T : unmanaged
         {
             RenderPassEncoderSetPushConstants(
-                           Impl, (uint)stages, offset, (uint)(data.Length * sizeof(T)),
+                           _impl, (uint)stages, offset, (uint)(data.Length * sizeof(T)),
                            (IntPtr)Unsafe.AsPointer(ref MemoryMarshal.GetReference(data))
                        );
         }
 
         public void SetScissorRect(uint x, uint y, uint width, uint height)
-            => RenderPassEncoderSetScissorRect(Impl, x, y, width, height);
+            => RenderPassEncoderSetScissorRect(_impl, x, y, width, height);
 
-        public void SetStencilReference(uint reference) => RenderPassEncoderSetStencilReference(Impl, reference);
+        public void SetStencilReference(uint reference) => RenderPassEncoderSetStencilReference(_impl, reference);
 
         public void SetVertexBuffer(uint slot, Buffer buffer, ulong offset, ulong size)
-            => RenderPassEncoderSetVertexBuffer(Impl, slot, buffer.Impl, offset, size);
+            => RenderPassEncoderSetVertexBuffer(_impl, slot, buffer.Impl, offset, size);
 
         public void SetViewport(float x, float y, float width, float height, float minDepth, float maxDepth)
-            => RenderPassEncoderSetViewport(Impl, x, y, width, height, minDepth, maxDepth);
+            => RenderPassEncoderSetViewport(_impl, x, y, width, height, minDepth, maxDepth);
     }
 }

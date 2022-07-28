@@ -6,32 +6,32 @@ namespace WGPU.NET
 {
     public class RenderBundleEncoder
     {
-        internal RenderBundleEncoderImpl Impl;
+        private RenderBundleEncoderImpl _impl;
 
         internal RenderBundleEncoder(RenderBundleEncoderImpl impl)
         {
             if (impl.Handle == IntPtr.Zero)
                 throw new ResourceCreationError(nameof(RenderBundleEncoder));
 
-            Impl = impl;
+            _impl = impl;
         }
 
         public void Draw(uint vertexCount, uint instanceCount, uint firstVertex, uint firstInstance)
-            => RenderBundleEncoderDraw(Impl, vertexCount, instanceCount, firstVertex, firstInstance);
+            => RenderBundleEncoderDraw(_impl, vertexCount, instanceCount, firstVertex, firstInstance);
 
         public void DrawIndexed(uint indexCount, uint instanceCount, uint firstIndex, int baseVertex, uint firstInstance)
-            => RenderBundleEncoderDrawIndexed(Impl, indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
+            => RenderBundleEncoderDrawIndexed(_impl, indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
 
         public void DrawIndexedIndirect(Buffer indirectBuffer, ulong indirectOffset)
-            => RenderBundleEncoderDrawIndexedIndirect(Impl, indirectBuffer.Impl, indirectOffset);
+            => RenderBundleEncoderDrawIndexedIndirect(_impl, indirectBuffer.Impl, indirectOffset);
 
         public void DrawIndirect(Buffer indirectBuffer, ulong indirectOffset)
-            => RenderBundleEncoderDrawIndirect(Impl, indirectBuffer.Impl, indirectOffset);
+            => RenderBundleEncoderDrawIndirect(_impl, indirectBuffer.Impl, indirectOffset);
 
         public RenderBundle Finish(string label)
         {
             return new RenderBundle(
-                RenderBundleEncoderFinish(Impl, new RenderBundleDescriptor
+                RenderBundleEncoderFinish(_impl, new RenderBundleDescriptor
                 {
                     label = label
                 })
@@ -39,16 +39,16 @@ namespace WGPU.NET
         }
 
         public void InsertDebugMarker(string markerLabel)
-            => RenderBundleEncoderInsertDebugMarker(Impl, markerLabel);
+            => RenderBundleEncoderInsertDebugMarker(_impl, markerLabel);
 
         public void PushDebugGroup(string groupLabel)
-            => RenderBundleEncoderPushDebugGroup(Impl, groupLabel);
+            => RenderBundleEncoderPushDebugGroup(_impl, groupLabel);
 
-        public void PopDebugGroup(string groupLabel) => RenderBundleEncoderPopDebugGroup(Impl);
+        public void PopDebugGroup(string groupLabel) => RenderBundleEncoderPopDebugGroup(_impl);
 
         public unsafe void SetBindGroup(uint groupIndex, BindGroup group, uint[] dynamicOffsets)
         {
-            RenderBundleEncoderSetBindGroup(Impl, groupIndex,
+            RenderBundleEncoderSetBindGroup(_impl, groupIndex,
                 group.Impl,
                 (uint)dynamicOffsets.Length,
                 ref Unsafe.AsRef<uint>((void*)Util.AllocHArray(dynamicOffsets))
@@ -56,12 +56,12 @@ namespace WGPU.NET
         }
 
         public void SetIndexBuffer(Buffer buffer, IndexFormat format, ulong offset, ulong size)
-            => RenderBundleEncoderSetIndexBuffer(Impl, buffer.Impl, format, offset, size);
+            => RenderBundleEncoderSetIndexBuffer(_impl, buffer.Impl, format, offset, size);
 
-        public void SetPipeline(RenderPipeline pipeline) => RenderBundleEncoderSetPipeline(Impl, pipeline.Impl);
+        public void SetPipeline(RenderPipeline pipeline) => RenderBundleEncoderSetPipeline(_impl, pipeline.Impl);
 
         public void SetVertexBuffer(uint slot, Buffer buffer, ulong offset, ulong size)
-            => RenderBundleEncoderSetVertexBuffer(Impl, slot, buffer.Impl, offset, size);
+            => RenderBundleEncoderSetVertexBuffer(_impl, slot, buffer.Impl, offset, size);
 
     }
 }

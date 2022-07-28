@@ -12,14 +12,14 @@ namespace WGPU.NET
         private static Dictionary<QueueImpl, Queue> instances =
             new Dictionary<QueueImpl, Queue>();
 
-        internal QueueImpl Impl;
+        private QueueImpl _impl;
 
         private Queue(QueueImpl impl)
         {
             if (impl.Handle == IntPtr.Zero)
                 throw new ResourceCreationError(nameof(Queue));
 
-            Impl = impl;
+            _impl = impl;
         }
 
         internal static Queue For(QueueImpl impl)
@@ -27,7 +27,7 @@ namespace WGPU.NET
 
         public void OnSubmittedWorkDone(QueueWorkDoneCallback callback)
         {
-            QueueOnSubmittedWorkDone(Impl,
+            QueueOnSubmittedWorkDone(_impl,
                 (s, d) => callback(s), 
                 IntPtr.Zero
             );
@@ -35,7 +35,7 @@ namespace WGPU.NET
 
         public unsafe void Submit(CommandBuffer[] commands)
         {
-            QueueSubmit(Impl, (uint)commands.Length,
+            QueueSubmit(_impl, (uint)commands.Length,
                 ref Unsafe.AsRef<CommandBufferImpl>(
                     (void*)Util.AllocHArray(commands.Length, commands.Select(x=>x.Impl))
                 )
@@ -48,7 +48,7 @@ namespace WGPU.NET
             ulong structSize = (ulong)sizeof(T);
 
 
-            QueueWriteBuffer(Impl, buffer.Impl, bufferOffset,
+            QueueWriteBuffer(_impl, buffer.Impl, bufferOffset,
                 (IntPtr)Unsafe.AsPointer(ref MemoryMarshal.GetReference(data)), 
                 (ulong)data.Length * structSize);
         }
@@ -60,7 +60,7 @@ namespace WGPU.NET
             ulong structSize = (ulong)Marshal.SizeOf<T>();
 
 
-            QueueWriteTexture(Impl, destination,
+            QueueWriteTexture(_impl, destination,
                 (IntPtr)Unsafe.AsPointer(ref MemoryMarshal.GetReference(data)),
                 (ulong)data.Length * structSize,
                 dataLayout, in writeSize);

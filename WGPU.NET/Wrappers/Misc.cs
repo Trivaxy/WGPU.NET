@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
@@ -105,7 +104,7 @@ namespace WGPU.NET
         }
 
         /// <summary>
-        /// Destroys the GPU Resource associated to this <see cref="QuerySet"/>
+        /// Destroys the GPU Resource associated with this <see cref="QuerySet"/>
         /// </summary>
         public void DestroyResource()
         {
@@ -252,21 +251,21 @@ namespace WGPU.NET
 
     public class SwapChain
     {
-        internal SwapChainImpl Impl;
+        private SwapChainImpl _impl;
 
         internal SwapChain(SwapChainImpl impl)
         {
             if (impl.Handle == IntPtr.Zero)
                 throw new ResourceCreationError(nameof(SwapChain));
 
-            Impl = impl;
+            _impl = impl;
         }
 
         public TextureView GetCurrentTextureView()
-            => TextureView.For(SwapChainGetCurrentTextureView(Impl));
+            => TextureView.For(SwapChainGetCurrentTextureView(_impl));
 
         public void Present()
-            => SwapChainPresent(Impl);
+            => SwapChainPresent(_impl);
     }
 
     public delegate void QueueWorkDoneCallback(QueueWorkDoneStatus status); 

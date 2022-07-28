@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
     public class Instance
     {
-        InstanceImpl _impl;
+        private InstanceImpl _impl;
+
         public Instance()
         {
             _impl = CreateInstance(new InstanceDescriptor());
@@ -19,7 +18,7 @@ namespace WGPU.NET
             {
                 label = label,
                 nextInChain = new WgpuStructChain()
-                .Add_SurfaceDescriptorFromAndroidNativeWindow(window)
+                .AddSurfaceDescriptorFromAndroidNativeWindow(window)
                 .GetPointer()
             }));
         }
@@ -30,7 +29,7 @@ namespace WGPU.NET
             {
                 label = label,
                 nextInChain = new WgpuStructChain()
-                .Add_SurfaceDescriptorFromCanvasHTMLSelector(selector)
+                .AddSurfaceDescriptorFromCanvasHTMLSelector(selector)
                 .GetPointer()
             }));
         }
@@ -41,7 +40,7 @@ namespace WGPU.NET
             {
                 label = label,
                 nextInChain = new WgpuStructChain()
-                .Add_SurfaceDescriptorFromMetalLayer(layer)
+                .AddSurfaceDescriptorFromMetalLayer(layer)
                 .GetPointer()
             }));
         }
@@ -52,7 +51,7 @@ namespace WGPU.NET
             {
                 label = label,
                 nextInChain = new WgpuStructChain()
-                .Add_SurfaceDescriptorFromWaylandSurface(display)
+                .AddSurfaceDescriptorFromWaylandSurface(display)
                 .GetPointer()
             }));
         }
@@ -63,7 +62,7 @@ namespace WGPU.NET
             {
                 label = label,
                 nextInChain = new WgpuStructChain()
-                .Add_SurfaceDescriptorFromWindowsHWND(hinstance, hwnd)
+                .AddSurfaceDescriptorFromWindowsHWND(hinstance, hwnd)
                 .GetPointer()
             }));
         }
@@ -74,7 +73,7 @@ namespace WGPU.NET
             {
                 label = label,
                 nextInChain = new WgpuStructChain()
-                .Add_SurfaceDescriptorFromXcbWindow(connection, window)
+                .AddSurfaceDescriptorFromXcbWindow(connection, window)
                 .GetPointer()
             }));
         }
@@ -85,12 +84,13 @@ namespace WGPU.NET
             {
                 label = label,
                 nextInChain = new WgpuStructChain()
-                .Add_SurfaceDescriptorFromXlibWindow(display, window)
+                .AddSurfaceDescriptorFromXlibWindow(display, window)
                 .GetPointer()
             }));
         }
 
         public void ProcessEvents() => InstanceProcessEvents(_impl);
+
         public void RequestAdapter(Surface compatibleSurface, PowerPreference powerPreference, bool forceFallbackAdapter, RequestAdapterCallback callback, BackendType? backendType = null)
         {
             InstanceRequestAdapter(_impl,
@@ -101,7 +101,7 @@ namespace WGPU.NET
                     forceFallbackAdapter = forceFallbackAdapter,
                     nextInChain = backendType == null ? IntPtr.Zero : 
                     new WgpuStructChain()
-                    .Add_AdapterExtras(backendType.Value).GetPointer()
+                    .AddAdapterExtras(backendType.Value).GetPointer()
                 }, 
                 (s,a,m,_) => callback(s, new Adapter(a), m), IntPtr.Zero);
         }
