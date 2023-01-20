@@ -44,7 +44,7 @@ namespace BindingsGenerator
 				DefaultOutputFilePath = outputClass + ".cs",
 				GenerateEnumItemAsFields = false,
 				TypedefCodeGenKind = CppTypedefCodeGenKind.NoWrap,
-				DefaultDllImportNameAndArguments = "\"libwgpu\"",
+				DefaultDllImportNameAndArguments = "\"libwgpu_native\"",
 
 				MappingRules =
 				{
@@ -57,11 +57,17 @@ namespace BindingsGenerator
 						if (item.Value.StartsWith("unchecked((int)"))
 							item.Value = item.Value[15..^1];
 
-						// remove redundancy in enum members
-						string enumName = (item.Parent as CSharpEnum).Name;
+						CSharpEnum parent = item.Parent as CSharpEnum;
+
+						// remove redundancy in enum members names
+						string enumName = parent.Name;
 
 						if (item.Name.StartsWith(enumName))
 							item.Name = item.Name.Substring(enumName.Length);
+
+						// this line is only really needed specifically for the WGPUInstanceBackend enum
+						if (item.Value.Contains("WGPU"))
+							item.Value = item.Value.Replace("WGPU" + parent.Name + "_", "");
 
 						// at this point a few enums will be named 1D, 2D or 3D which is invalid, so we fix it
 						if (item.Name.StartsWith("1D"))
