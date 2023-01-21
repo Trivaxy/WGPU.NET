@@ -12,7 +12,7 @@ struct VOut {
 @binding(0)
 var<uniform> ub : UniformBuffer;
 
-@stage(vertex)
+@vertex
 fn vs_main(@location(0) pos: vec3<f32>, @location(1) col: vec4<f32>, @location(2) uv: vec2<f32>) -> VOut {
     
 
@@ -29,7 +29,7 @@ var samp : sampler;
 @binding(2)
 var tex : texture_2d<f32>;
 
-@stage(fragment)
+@fragment
 fn fs_main(in : VOut) -> @location(0) vec4<f32> {
     let rpos = vec2<f32>(
         floor(in.uv.x*10.0),

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
@@ -9,10 +10,13 @@ namespace WGPU.NET
         public Limits Limits;
     }
 
+    public partial struct RequiredLimitsExtras
+    {
+        public uint MaxPushConstantSize;
+    }
+
     public struct DeviceExtras
     {
-        public NativeFeature NativeFeatures;
-        public string Label;
         public string TracePath;
     }
 
@@ -60,19 +64,29 @@ namespace WGPU.NET
 
         public bool HasFeature(FeatureName feature) => AdapterHasFeature(Impl, feature);
 
-        public void RequestDevice(RequestDeviceCallback callback, QueueDescriptor defaultQueue = default, RequiredLimits ? limits = null, DeviceExtras? deviceExtras = null)
+        public void RequestDevice(RequestDeviceCallback callback, string label, NativeFeature[] nativeFeatures, QueueDescriptor defaultQueue = default, 
+            Limits? limits = null, RequiredLimitsExtras? limitsExtras = null, DeviceExtras? deviceExtras = null)
         {
-            var _limits = limits.Value;
-
             AdapterRequestDevice(Impl, new DeviceDescriptor()
             {
                 defaultQueue = defaultQueue,
-                requiredLimits = Util.Optional(limits),
+                requiredLimits = limits==null ? IntPtr.Zero : 
+                Util.AllocHStruct(new Wgpu.RequiredLimits
+                {
+                    nextInChain = limitsExtras == null ? IntPtr.Zero : 
+                    new WgpuStructChain()
+                    .AddRequiredLimitsExtras(
+                        limitsExtras.Value.MaxPushConstantSize)
+                    .GetPointer(),
+                    limits = limits.Value
+                })
+                ,
+                requiredFeaturesCount = (uint)nativeFeatures.Length,
+                requiredFeatures = Util.AllocHArray(nativeFeatures),
+                label = label,
                 nextInChain = deviceExtras==null ? IntPtr.Zero :
                 new WgpuStructChain()
                 .AddDeviceExtras(
-                    deviceExtras.Value.NativeFeatures, 
-                    deviceExtras.Value.Label, 
                     deviceExtras.Value.TracePath)
                 .GetPointer()
             }, 
