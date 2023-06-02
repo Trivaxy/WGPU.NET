@@ -140,20 +140,18 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain AddDeviceExtras(Wgpu.NativeFeature nativeFeatures = default, string label = default, string tracePath = default)
+		public WgpuStructChain AddDeviceExtras(string tracePath = default)
 		{
 			AddStruct(new Wgpu.DeviceExtras()
 			{
 				chain = new Wgpu.ChainedStruct { sType = (Wgpu.SType)Wgpu.NativeSType.STypeDeviceExtras },
-				nativeFeatures = nativeFeatures,
-				label = label, 
 				tracePath = tracePath
 			});
 
 			return this;
 		}
 
-		public WgpuStructChain AddRequiredLimitsExtras(uint maxPushConstantSize = default)
+        public WgpuStructChain AddRequiredLimitsExtras(uint maxPushConstantSize = default)
 		{
 			AddStruct(new Wgpu.RequiredLimitsExtras()
 			{

@@ -31,7 +31,7 @@ namespace WGPU.NET
 		public unsafe static IntPtr AllocHArray<T>(T[] arr)
 			where T : struct
 		{
-			int size = Marshal.SizeOf<T>();
+			int size = sizeof(T);
 
 			IntPtr ptr = Marshal.AllocHGlobal(size * arr.Length);
 
@@ -48,7 +48,7 @@ namespace WGPU.NET
 		public unsafe static IntPtr AllocHArray<T>(int count, IEnumerable<T> items)
 			where T : struct
 		{
-			int size = Marshal.SizeOf<T>();
+			int size = sizeof(T);
 
 			IntPtr ptr = Marshal.AllocHGlobal(size * count);
 

@@ -19,11 +19,11 @@ namespace WGPU.NET
         public void BeginPipelineStatisticsQuery(QuerySet querySet, uint queryIndex)
             => ComputePassEncoderBeginPipelineStatisticsQuery(Impl, querySet.Impl, queryIndex);
 
-        public void Dispatch(uint workgroupCountX, uint workgroupCountY, uint workgroupCountZ)
-            => ComputePassEncoderDispatch(Impl, workgroupCountX, workgroupCountY, workgroupCountZ);
+        public void DispatchWorkgroups(uint workgroupCountX, uint workgroupCountY, uint workgroupCountZ)
+            => ComputePassEncoderDispatchWorkgroups(Impl, workgroupCountX, workgroupCountY, workgroupCountZ);
 
-        public void DispatchIndirect(Buffer indirectBuffer, ulong indirectOffset)
-            => ComputePassEncoderDispatchIndirect(Impl, indirectBuffer.Impl, indirectOffset);
+        public void DispatchWorkgroupsIndirect(Buffer indirectBuffer, ulong indirectOffset)
+            => ComputePassEncoderDispatchWorkgroupsIndirect(Impl, indirectBuffer.Impl, indirectOffset);
 
         public void End() => ComputePassEncoderEnd(Impl);
 

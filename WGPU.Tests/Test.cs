@@ -89,26 +89,19 @@ namespace WGPU.Tests
 
 			Adapter adapter = default;
 
-			instance.RequestAdapter(surface, default, default, (s, a, m) => adapter = a, Wgpu.BackendType.D3D12);
+			instance.RequestAdapter(surface, default, default, (s, a, m) => adapter = a, Wgpu.BackendType.Vulkan);
 
 			adapter.GetProperties(out Wgpu.AdapterProperties properties);
 
+			adapter.GetLimits(out var supportedLimits);
 
 			Device device = default;
 
 			adapter.RequestDevice((s, d, m) => device = d,
-				limits: new RequiredLimits()
-				{
-					Limits = new Wgpu.Limits()
-					{
-						maxBindGroups = 1
-					}
-				},
-				deviceExtras: new DeviceExtras
-				{
-					Label = "Device"
-				}
-			);
+				limits: supportedLimits.limits,
+                label: "Device",
+				nativeFeatures: Array.Empty<Wgpu.NativeFeature>()
+            );
 
 
 			device.SetUncapturedErrorCallback(ErrorCallback);
@@ -209,6 +202,7 @@ namespace WGPU.Tests
 					buffer = new Wgpu.BufferBindingLayout
 					{
 						type = Wgpu.BufferBindingType.Uniform,
+						minBindingSize = (ulong)sizeof(UniformBuffer)
 					},
 					visibility = (uint)Wgpu.ShaderStage.Vertex
 				},
@@ -217,7 +211,7 @@ namespace WGPU.Tests
 					binding = 1,
 					sampler = new Wgpu.SamplerBindingLayout
 					{
-						type = Wgpu.SamplerBindingType.Filtering
+						type = Wgpu.SamplerBindingType.Filtering,
 					},
 					visibility = (uint)Wgpu.ShaderStage.Fragment
 				},
@@ -227,7 +221,8 @@ namespace WGPU.Tests
 					texture = new Wgpu.TextureBindingLayout
 					{
 						viewDimension = Wgpu.TextureViewDimension.TwoDimensions,
-						sampleType = Wgpu.TextureSampleType.Float
+						sampleType = Wgpu.TextureSampleType.Float,
+						
 					},
 					visibility = (uint)Wgpu.ShaderStage.Fragment
 				}
@@ -238,8 +233,10 @@ namespace WGPU.Tests
 				new BindGroupEntry
 				{
 					Binding = 0,
-					Buffer = uniformBuffer
-				},
+					Buffer = uniformBuffer,
+					Offset = 0,
+					Size = (ulong)sizeof(UniformBuffer)
+                },
 				new BindGroupEntry
 				{
 					Binding = 1,
