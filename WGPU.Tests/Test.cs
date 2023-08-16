@@ -158,7 +158,7 @@ namespace WGPU.Tests
 
 				image.CopyPixelDataTo(pixels);
 
-				device.GetQueue().WriteTexture<Rgba32>(
+				device.Queue.WriteTexture<Rgba32>(
 					destination: new ImageCopyTexture
 					{
 						Aspect = Wgpu.TextureAspect.All,
@@ -436,7 +436,7 @@ namespace WGPU.Tests
 
 					swapChain = device.CreateSwapChain(surface, swapChainDescriptor);
 
-					depthTexture.DestroyResource();
+					depthTexture.Dispose();
 					depthTexture = device.CreateTexture(depthTextureDescriptor);
 					depthTextureView = depthTexture.CreateTextureView();
 				}
@@ -515,10 +515,12 @@ namespace WGPU.Tests
 				renderPass.SetVertexBuffer(0, vertexBuffer, 0, (ulong)(vertices.Length * sizeof(Vertex)));
 				renderPass.Draw(3, 1, 0, 0);
 				renderPass.End();
+				
+				nextTexture.Dispose();
 
 
 
-				var queue = device.GetQueue();
+				var queue = device.Queue;
 
 				uniformBufferSpan[0] = uniformBufferData;
 
