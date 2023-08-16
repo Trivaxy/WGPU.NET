@@ -3,7 +3,7 @@ using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
-    public class Surface
+    public class Surface : IDisposable
     {
         internal SurfaceImpl Impl;
 
@@ -18,6 +18,12 @@ namespace WGPU.NET
         public TextureFormat GetPreferredFormat(Adapter adapter)
         {
             return SurfaceGetPreferredFormat(Impl, adapter.Impl);
+        }
+
+        public void Dispose()
+        {
+            SurfaceRelease(Impl);
+            Impl = default;
         }
     }
 }

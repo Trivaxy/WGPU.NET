@@ -54,7 +54,7 @@ namespace WGPU.NET
         public uint WriteMask;
     }
 
-    public class Device
+    public class Device : IDisposable
     {
         private DeviceImpl _impl;
 
@@ -70,6 +70,8 @@ namespace WGPU.NET
 
             private set => _impl = value;
         }
+        
+        public Queue Queue { get; private set; }
 
         internal Device(DeviceImpl impl)
         {
@@ -77,40 +79,57 @@ namespace WGPU.NET
                 throw new ResourceCreationError(nameof(Device));
 
             Impl = impl;
+            Queue = new Queue(DeviceGetQueue(impl));
         }
 
         public BindGroup CreateBindGroup(string label, BindGroupLayout layout, BindGroupEntry[] entries)
         {
-            return new BindGroup(
-                DeviceCreateBindGroup(Impl, new BindGroupDescriptor
+            Span<Wgpu.BindGroupEntry> entriesInner = stackalloc Wgpu.BindGroupEntry[entries.Length];
+
+            for (int i = 0; i < entries.Length; i++)
+            {
+                BindGroupEntry entryOuter = entries[i];
+                entriesInner[i] = new Wgpu.BindGroupEntry
                 {
-                    label = label,
-                    layout = layout.Impl,
-                    entries = Util.AllocHArray(entries.Length,
-                    entries.Select(x => new Wgpu.BindGroupEntry()
+                    binding = entryOuter.Binding,
+                    buffer = entryOuter.Buffer?.Impl ?? default,
+                    offset = entryOuter.Offset,
+                    size = entryOuter.Size,
+                    sampler = entryOuter.Sampler?.Impl ?? default,
+                    textureView = entryOuter.TextureView?.Impl ?? default
+                };
+            }
+
+            unsafe
+            {
+                return new BindGroup(
+                    DeviceCreateBindGroup(Impl, new BindGroupDescriptor
                     {
-                        binding = x.Binding,
-                        buffer = x.Buffer?.Impl ?? default,
-                        offset = x.Offset,
-                        size = x.Size,
-                        sampler = x.Sampler?.Impl ?? default,
-                        textureView = x.TextureView?.Impl ?? default
-                    })),
-                    entryCount = (uint)entries.Length
-                })
-            );
+                        label = label,
+                        layout = layout.Impl,
+                        entries = new IntPtr(Unsafe.AsPointer(ref entriesInner.GetPinnableReference())),
+                        entryCount = (uint)entries.Length
+                    })
+                );
+            }
         }
 
         public BindGroupLayout CreateBindgroupLayout(string label, BindGroupLayoutEntry[] entries)
         {
-            return BindGroupLayout.For(
-                DeviceCreateBindGroupLayout(Impl, new BindGroupLayoutDescriptor
+            unsafe
+            {
+                fixed (BindGroupLayoutEntry* entriesPtr = entries)
                 {
-                    label = label,
-                    entries = Util.AllocHArray(entries),
-                    entryCount = (uint)entries.Length
-                })
-            );
+                    return BindGroupLayout.For(
+                        DeviceCreateBindGroupLayout(Impl, new BindGroupLayoutDescriptor
+                        {
+                            label = label,
+                            entries = new IntPtr(entriesPtr),
+                            entryCount = (uint)entries.Length
+                        })
+                    );
+                }
+            }
         }
 
         public Buffer CreateBuffer(string label, bool mappedAtCreation, ulong size, BufferUsage usage)
@@ -169,48 +188,65 @@ namespace WGPU.NET
 
         public PipelineLayout CreatePipelineLayout(string label, BindGroupLayout[] bindGroupLayouts)
         {
-            return new PipelineLayout(
-                DeviceCreatePipelineLayout(Impl, new PipelineLayoutDescriptor
-                {
-                    label = label,
-                    bindGroupLayouts = Util.AllocHArray(
-                        bindGroupLayouts.Length,
-                        bindGroupLayouts.Select(x => x.Impl)),
+            Span<BindGroupLayoutImpl> bindGroupLayoutsInner = stackalloc BindGroupLayoutImpl[bindGroupLayouts.Length];
 
-                    bindGroupLayoutCount = (uint)bindGroupLayouts.Length
-                })
-            );
+            for (int i = 0; i < bindGroupLayouts.Length; i++)
+                bindGroupLayoutsInner[i] = bindGroupLayouts[i].Impl;
+
+            unsafe
+            {
+                return new PipelineLayout(
+                    DeviceCreatePipelineLayout(Impl, new PipelineLayoutDescriptor
+                    {
+                        label = label,
+                        bindGroupLayouts = new IntPtr(Unsafe.AsPointer(ref bindGroupLayoutsInner.GetPinnableReference())),
+                        bindGroupLayoutCount = (uint)bindGroupLayouts.Length
+                    })
+                );
+            }
         }
 
         public QuerySet CreateQuerySet(string label, QueryType queryType, uint count, PipelineStatisticName[] pipelineStatistics)
         {
-            return new QuerySet(
-                DeviceCreateQuerySet(Impl, new QuerySetDescriptor
+            unsafe
+            {
+                fixed (PipelineStatisticName* pipelineStatisticsPtr = pipelineStatistics)
                 {
-                    label = label,
-                    type = queryType,
-                    count = count,
-                    pipelineStatistics = Util.AllocHArray(pipelineStatistics),
-                    pipelineStatisticsCount = (uint)pipelineStatistics.Length
-                })
-            );
+                    return new QuerySet(
+                        DeviceCreateQuerySet(Impl, new QuerySetDescriptor
+                        {
+                            label = label,
+                            type = queryType,
+                            count = count,
+                            pipelineStatistics = new IntPtr(pipelineStatisticsPtr),
+                            pipelineStatisticsCount = (uint)pipelineStatistics.Length
+                        })
+                    );
+                }
+            }
         }
 
         public RenderBundleEncoder CreateRenderBundleEncoder(string label, TextureFormat[] colorFormats, TextureFormat depthStencilFormat,
             uint sampleCount, bool depthReadOnly, bool stencilReadOnly)
         {
-            return new RenderBundleEncoder(
-                DeviceCreateRenderBundleEncoder(Impl, new RenderBundleEncoderDescriptor
+            unsafe
+            {
+                fixed (TextureFormat* colorFormatsPtr = colorFormats)
                 {
-                    label = label,
-                    colorFormats = Util.AllocHArray(colorFormats),
-                    colorFormatsCount = (uint)colorFormats.Length,
-                    depthStencilFormat = depthStencilFormat,
-                    sampleCount = sampleCount,
-                    depthReadOnly = depthReadOnly,
-                    stencilReadOnly = stencilReadOnly
-                })
-            );
+                    return new RenderBundleEncoder(
+                        DeviceCreateRenderBundleEncoder(Impl, new RenderBundleEncoderDescriptor
+                        {
+                            label = label,
+                            colorFormats = new IntPtr(colorFormatsPtr),
+                            colorFormatsCount = (uint)colorFormats.Length,
+                            depthStencilFormat = depthStencilFormat,
+                            sampleCount = sampleCount,
+                            depthReadOnly = depthReadOnly,
+                            stencilReadOnly = stencilReadOnly
+                        })
+                    );
+                }
+            }
         }
 
         public RenderPipeline CreateRenderPipeline(string label, PipelineLayout layout,
@@ -218,8 +254,10 @@ namespace WGPU.NET
             DepthStencilState? depthStencilState = null, FragmentState? fragmentState = null)
         {
             RenderPipelineDescriptor desc = CreateRenderPipelineDescriptor(label, layout, vertexState, primitiveState, multisampleState, depthStencilState, fragmentState);
-
-            return new RenderPipeline(DeviceCreateRenderPipeline(Impl, desc));
+            RenderPipelineImpl pipelineImpl = DeviceCreateRenderPipeline(Impl, desc);
+            
+            FreeRenderPipelineDescriptor(desc);
+            return new RenderPipeline(pipelineImpl);
         }
 
         public void CreateRenderPipelineAsync(string label, CreateRenderPipelineAsyncCallback callback, PipelineLayout layout,
@@ -227,8 +265,11 @@ namespace WGPU.NET
             DepthStencilState? depthStencilState = null, FragmentState? fragmentState = null)
         {
             RenderPipelineDescriptor desc = CreateRenderPipelineDescriptor(label, layout, vertexState, primitiveState, multisampleState, depthStencilState, fragmentState);
-
-            DeviceCreateRenderPipelineAsync(Impl, desc, (s, p, m, _) => callback(s, new RenderPipeline(p), m), IntPtr.Zero);
+            DeviceCreateRenderPipelineAsync(Impl, desc, (s, p, m, _) =>
+            {
+                FreeRenderPipelineDescriptor(desc);
+                callback(s, new RenderPipeline(p), m);
+            }, IntPtr.Zero);
         }
 
         public delegate void CreateRenderPipelineAsyncCallback(CreatePipelineAsyncStatus status, RenderPipeline pipeline, string message);
@@ -274,6 +315,32 @@ namespace WGPU.NET
                     targetCount = (uint)fragmentState.Value.colorTargets.Length
                 })
             };
+        }
+
+        private static void FreeRenderPipelineDescriptor(RenderPipelineDescriptor descriptor)
+        {
+            unsafe
+            {
+                Wgpu.VertexBufferLayout* buffers = (Wgpu.VertexBufferLayout*)descriptor.vertex.buffers;
+
+                for (ulong i = 0; i < descriptor.vertex.bufferCount; i++)
+                    Util.FreePtr(buffers[i].attributes);
+                
+                Util.FreePtr(descriptor.vertex.buffers);
+                Util.FreePtr(descriptor.depthStencil);
+
+                if (descriptor.fragment == IntPtr.Zero)
+                    return;
+
+                Wgpu.FragmentState* fragment = (Wgpu.FragmentState*)descriptor.fragment;
+                Wgpu.ColorTargetState* targets = (Wgpu.ColorTargetState*)fragment->targets;
+                
+                for (ulong i = 0; i < fragment->targetCount; i++)
+                    Util.FreePtr(targets[i].blend);
+                
+                Util.FreePtr(fragment->targets);
+                Util.FreePtr(descriptor.fragment);
+            }
         }
 
         public Sampler CreateSampler(string label, AddressMode addressModeU, AddressMode addressModeV, AddressMode addressModeW,
@@ -393,21 +460,12 @@ namespace WGPU.NET
             return DeviceGetLimits(Impl, ref limits);
         }
 
-        public Queue GetQueue() => Queue.For(DeviceGetQueue(Impl));
-
         public bool HasFeature(FeatureName feature) => DeviceHasFeature(Impl, feature);
 
         public void PushErrorScope(ErrorFilter filter) => DevicePushErrorScope(Impl, filter);
         public void PopErrorScope(ErrorCallback callback)
         {
             DevicePopErrorScope(Impl,
-                (t, m, _) => callback(t, m),
-                IntPtr.Zero);
-        }
-
-        public void SetDeviceLostCallback(DeviceLostCallback callback)
-        {
-            DeviceSetDeviceLostCallback(Impl,
                 (t, m, _) => callback(t, m),
                 IntPtr.Zero);
         }
@@ -425,24 +483,14 @@ namespace WGPU.NET
                 errorCallback,
                 IntPtr.Zero);
         }
-
-
-
-        /// <summary>
-        /// Destroys the GPU Resource associated to this <see cref="Device"/>
-        /// </summary>
-        public void DestroyResource()
-        {
-            DeviceDestroy(Impl);
-            Impl = default;
-        }
         
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="Device"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+        public void Dispose()
         {
-            DeviceDrop(Impl);
+            Queue.Dispose();
+            Queue = null;
+            
+            DeviceDestroy(Impl);
+            DeviceRelease(Impl);
             Impl = default;
         }
     }

@@ -7,6 +7,7 @@ namespace WGPU.NET
     public class WgpuStructChain : IDisposable
 	{
 		private readonly List<IntPtr> _pointers = new List<IntPtr>();
+		private readonly List<IntPtr> _trackedAllocatedData = new List<IntPtr>();
         private IntPtr _pointer = IntPtr.Zero;
 
         public IntPtr GetPointer()
@@ -30,7 +31,7 @@ namespace WGPU.NET
 			AddStruct(new Wgpu.ShaderModuleSPIRVDescriptor()
 			{
 				chain = new Wgpu.ChainedStruct { sType = Wgpu.SType.ShaderModuleSPIRVDescriptor },
-				code = Util.AllocHArray(code),
+				code = TrackAllocatedData(Util.AllocHArray(code)),
 				codeSize = (uint)code.Length
 			});
 
@@ -129,17 +130,6 @@ namespace WGPU.NET
 			return this;
 		}
 
-		public WgpuStructChain AddAdapterExtras(Wgpu.BackendType backend = default)
-		{
-			AddStruct(new Wgpu.AdapterExtras()
-			{
-				chain = new Wgpu.ChainedStruct { sType = (Wgpu.SType)Wgpu.NativeSType.STypeAdapterExtras },
-				backend = backend
-			});
-
-			return this;
-		}
-
 		public WgpuStructChain AddDeviceExtras(string tracePath = default)
 		{
 			AddStruct(new Wgpu.DeviceExtras()
@@ -168,7 +158,7 @@ namespace WGPU.NET
 			{
 				chain = new Wgpu.ChainedStruct { sType = (Wgpu.SType)Wgpu.NativeSType.STypePipelineLayoutExtras },
 				pushConstantRangeCount = (uint)pushConstantRanges.Length,
-				pushConstantRanges = Util.AllocHArray(pushConstantRanges)
+				pushConstantRanges = TrackAllocatedData(Util.AllocHArray(pushConstantRanges))
 			});
 
 			return this;
@@ -190,12 +180,22 @@ namespace WGPU.NET
             }
 		}
 
+		private IntPtr TrackAllocatedData(IntPtr ptr)
+		{
+			_trackedAllocatedData.Add(ptr);
+			return ptr;
+		}
+
         public void Dispose()
         {
             foreach (var pointer in _pointers)
-            {
-				Marshal.FreeHGlobal(pointer);
-            }
+	            Util.FreePtr(pointer);
+            
+            foreach (var pointer in _trackedAllocatedData)
+	            Util.FreePtr(pointer);
+            
+            _pointers.Clear();
+            _trackedAllocatedData.Clear();
         }
     }
 }

@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
-    public class Texture
+    public class Texture : IDisposable
     {
         private TextureImpl _impl;
 
         private TextureDescriptor _descriptor;
+
+        private HashSet<TextureViewImpl> createdViews;
 
         public string Label => _descriptor.label;
 
@@ -29,8 +32,8 @@ namespace WGPU.NET
                 throw new ResourceCreationError(nameof(Texture));
 
             Impl = impl;
-
             _descriptor = descriptor;
+            createdViews = new HashSet<TextureViewImpl>();
         }
 
         internal TextureImpl Impl
@@ -48,8 +51,9 @@ namespace WGPU.NET
 
         public TextureView CreateTextureView(string label, TextureFormat format, TextureViewDimension dimension,
             uint baseMipLevel, uint mipLevelCount, uint baseArrayLayer, uint arrayLayerCount,
-            TextureAspect aspect) =>
-            TextureView.For(TextureCreateView(Impl, new TextureViewDescriptor
+            TextureAspect aspect)
+        {
+            TextureView view = TextureView.Create(TextureCreateView(Impl, new TextureViewDescriptor
             {
                 label = label,
                 format = format,
@@ -59,23 +63,34 @@ namespace WGPU.NET
                 baseArrayLayer = baseArrayLayer,
                 arrayLayerCount = arrayLayerCount,
                 aspect = aspect
-            }));
+            }), this);
 
-        /// <summary>
-        /// Destroys the GPU Resource associated with this <see cref="Texture"/>
-        /// </summary>
-        public void DestroyResource()
-        {
-            TextureDestroy(Impl);
-            Impl = default;
+            createdViews.Add(view.Impl);
+
+            return view;
         }
-        
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="Texture"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+
+        internal void RemoveTextureView(TextureView view)
         {
-            TextureDrop(Impl);
+            if (view.Texture != this)
+                throw new TextureDoesNotOwnViewException(Label);
+                    
+            createdViews.Remove(view.Impl);
+        }
+
+        public void Dispose()
+        {
+            foreach (TextureViewImpl impl in createdViews)
+            {
+                TextureView.For(impl).Impl = default;
+                TextureView.Forget(impl);
+                TextureViewRelease(impl);
+            }
+            
+            createdViews.Clear();
+            
+            TextureDestroy(Impl);
+            TextureRelease(Impl);
             Impl = default;
         }
     }

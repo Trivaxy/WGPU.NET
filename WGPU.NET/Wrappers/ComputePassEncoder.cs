@@ -4,7 +4,7 @@ using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
-    public class ComputePassEncoder
+    public class ComputePassEncoder : IDisposable
     {
         internal ComputePassEncoderImpl Impl;
 
@@ -39,13 +39,22 @@ namespace WGPU.NET
 
         public unsafe void SetBindGroup(uint groupIndex, BindGroup group, uint[] dynamicOffsets)
         {
-            ComputePassEncoderSetBindGroup(Impl, groupIndex,
-                group.Impl,
-                (uint)dynamicOffsets.Length,
-                ref Unsafe.AsRef<uint>((void*)Util.AllocHArray(dynamicOffsets))
-            );
+            fixed (uint* dynamicOffsetsPtr = dynamicOffsets)
+            {
+                ComputePassEncoderSetBindGroup(Impl, groupIndex,
+                    group.Impl,
+                    (uint)dynamicOffsets.Length,
+                    ref Unsafe.AsRef<uint>(dynamicOffsetsPtr)
+                );
+            }
         }
 
         public void SetPipeline(ComputePipeline pipeline) => ComputePassEncoderSetPipeline(Impl, pipeline.Impl);
+
+        public void Dispose()
+        {
+            ComputePassEncoderRelease(Impl);
+            Impl = default;
+        }
     }
 }

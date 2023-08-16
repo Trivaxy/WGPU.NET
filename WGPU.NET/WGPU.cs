@@ -40,21 +40,23 @@ namespace WGPU.NET
         
         public enum BackendType : int
         {
-            Null = 0x00000000,
+            Undefined = 0x00000000,
             
-            WebGPU = 0x00000001,
+            Null = 0x00000001,
             
-            D3D11 = 0x00000002,
+            WebGPU = 0x00000002,
             
-            D3D12 = 0x00000003,
+            D3D11 = 0x00000003,
             
-            Metal = 0x00000004,
+            D3D12 = 0x00000004,
             
-            Vulkan = 0x00000005,
+            Metal = 0x00000005,
             
-            OpenGL = 0x00000006,
+            Vulkan = 0x00000006,
             
-            OpenGLES = 0x00000007,
+            OpenGL = 0x00000007,
+            
+            OpenGLES = 0x00000008,
             
             Force32 = 0x7FFFFFFF,
         }
@@ -122,7 +124,7 @@ namespace WGPU.NET
         {
             Success = 0x00000000,
             
-            Error = 0x00000001,
+            ValidationError = 0x00000001,
             
             Unknown = 0x00000002,
             
@@ -131,6 +133,12 @@ namespace WGPU.NET
             DestroyedBeforeCallback = 0x00000004,
             
             UnmappedBeforeCallback = 0x00000005,
+            
+            MappingAlreadyPending = 0x00000006,
+            
+            OffsetOutOfRange = 0x00000007,
+            
+            SizeOutOfRange = 0x00000008,
             
             Force32 = 0x7FFFFFFF,
         }
@@ -292,6 +300,8 @@ namespace WGPU.NET
             RG11B10UfloatRenderable = 0x0000000A,
             
             BGRA8UnormStorage = 0x0000000B,
+            
+            Float32Filterable = 0x0000000C,
             
             Force32 = 0x7FFFFFFF,
         }
@@ -544,19 +554,6 @@ namespace WGPU.NET
             StencilOnly = 0x00000001,
             
             DepthOnly = 0x00000002,
-            
-            Force32 = 0x7FFFFFFF,
-        }
-        
-        public enum TextureComponentType : int
-        {
-            Float = 0x00000000,
-            
-            Sint = 0x00000001,
-            
-            Uint = 0x00000002,
-            
-            DepthComparison = 0x00000003,
             
             Force32 = 0x7FFFFFFF,
         }
@@ -1016,15 +1013,17 @@ namespace WGPU.NET
         
         public enum NativeFeature : int
         {
-            PUSHCONSTANTS = 0x60000001,
+            PushConstants = 0x60000001,
             
-            TEXTUREADAPTERSPECIFICFORMATFEATURES = 0x60000002,
+            TextureAdapterSpecificFormatFeatures = 0x60000002,
             
-            MULTIDRAWINDIRECT = 0x60000003,
+            MultiDrawIndirect = 0x60000003,
             
-            MULTIDRAWINDIRECTCOUNT = 0x60000004,
+            MultiDrawIndirectCount = 0x60000004,
             
-            VERTEXWRITABLESTORAGE = 0x60000005,
+            VertexWritableStorage = 0x60000005,
+            
+            Force32 = 0x7FFFFFFF,
         }
         
         public enum LogLevel : int
@@ -1600,22 +1599,9 @@ namespace WGPU.NET
             public static bool operator !=(TextureViewImpl left, TextureViewImpl right) => !left.Equals(right);
         }
         
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public partial struct ChainedStruct
-        {
-            public IntPtr next;
-            
-            public Wgpu.SType sType;
-        }
-        
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public partial struct ChainedStructOut
-        {
-            public IntPtr next;
-            
-            public Wgpu.SType sType;
-        }
-        
+        /// <summary>
+        /// Structure forward declarations
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public partial struct AdapterProperties
         {
@@ -1643,30 +1629,37 @@ namespace WGPU.NET
         }
         
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public partial struct ChainedStructOut
+        {
+            public IntPtr next;
+            
+            public Wgpu.SType sType;
+        }
+        
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public partial struct BindGroupEntry
         {
             public IntPtr nextInChain;
             
             public uint binding;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public Wgpu.BufferImpl buffer;
             
             public ulong offset;
             
             public ulong size;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public Wgpu.SamplerImpl sampler;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public Wgpu.TextureViewImpl textureView;
+        }
+        
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public partial struct ChainedStruct
+        {
+            public IntPtr next;
+            
+            public Wgpu.SType sType;
         }
         
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -1697,9 +1690,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
@@ -1728,9 +1718,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
         }
@@ -1740,9 +1727,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
         }
@@ -1752,9 +1736,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string message;
             
@@ -1906,13 +1887,10 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
-            public uint bindGroupLayoutCount;
+            public ulong bindGroupLayoutCount;
             
             public IntPtr bindGroupLayouts;
         }
@@ -1948,9 +1926,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
@@ -1960,7 +1935,7 @@ namespace WGPU.NET
             
             public IntPtr pipelineStatistics;
             
-            public uint pipelineStatisticsCount;
+            public ulong pipelineStatisticsCount;
         }
         
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -1968,9 +1943,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
         }
@@ -1980,9 +1952,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
         }
@@ -1992,13 +1961,10 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
-            public uint colorFormatsCount;
+            public ulong colorFormatsCount;
             
             public IntPtr colorFormats;
             
@@ -2063,12 +2029,11 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public Wgpu.SurfaceImpl compatibleSurface;
             
             public Wgpu.PowerPreference powerPreference;
+            
+            public Wgpu.BackendType backendType;
             
             [MarshalAs(UnmanagedType.U1)]
             public bool forceFallbackAdapter;
@@ -2087,9 +2052,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
@@ -2179,9 +2141,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
         }
@@ -2277,9 +2236,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
@@ -2324,9 +2280,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
@@ -2360,15 +2313,12 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
             public Wgpu.BindGroupLayoutImpl layout;
             
-            public uint entryCount;
+            public ulong entryCount;
             
             public IntPtr entries;
         }
@@ -2404,7 +2354,7 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            public uint messageCount;
+            public ulong messageCount;
             
             public IntPtr messages;
         }
@@ -2414,13 +2364,10 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
-            public uint timestampWriteCount;
+            public ulong timestampWriteCount;
             
             public IntPtr timestampWrites;
         }
@@ -2486,7 +2433,7 @@ namespace WGPU.NET
             [MarshalAs(UnmanagedType.LPStr)]
             public string entryPoint;
             
-            public uint constantCount;
+            public ulong constantCount;
             
             public IntPtr constants;
         }
@@ -2494,14 +2441,8 @@ namespace WGPU.NET
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public partial struct RenderPassColorAttachment
         {
-            /// <summary>
-            /// nullable
-            /// </summary>
             public Wgpu.TextureViewImpl view;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public Wgpu.TextureViewImpl resolveTarget;
             
             public Wgpu.LoadOp loadOp;
@@ -2524,13 +2465,10 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
-            public uint hintCount;
+            public ulong hintCount;
             
             public IntPtr hints;
         }
@@ -2548,9 +2486,6 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
@@ -2566,7 +2501,7 @@ namespace WGPU.NET
             
             public uint sampleCount;
             
-            public uint viewFormatCount;
+            public ulong viewFormatCount;
             
             public IntPtr viewFormats;
         }
@@ -2578,7 +2513,7 @@ namespace WGPU.NET
             
             public Wgpu.VertexStepMode stepMode;
             
-            public uint attributeCount;
+            public ulong attributeCount;
             
             public IntPtr attributes;
         }
@@ -2588,13 +2523,10 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
-            public uint entryCount;
+            public ulong entryCount;
             
             public IntPtr entries;
         }
@@ -2606,9 +2538,6 @@ namespace WGPU.NET
             
             public Wgpu.TextureFormat format;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public IntPtr blend;
             
             public uint writeMask;
@@ -2619,15 +2548,9 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public Wgpu.PipelineLayoutImpl layout;
             
             public Wgpu.ProgrammableStageDescriptor compute;
@@ -2638,50 +2561,42 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
-            public uint requiredFeaturesCount;
+            public ulong requiredFeaturesCount;
             
             public IntPtr requiredFeatures;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public IntPtr requiredLimits;
             
             public Wgpu.QueueDescriptor defaultQueue;
+            
+            public Wgpu.DeviceLostCallback deviceLostCallback;
+            
+            public IntPtr deviceLostUserdata;
         }
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void DeviceLostCallback(Wgpu.DeviceLostReason reason, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userdata);
         
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public partial struct RenderPassDescriptor
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
-            public uint colorAttachmentCount;
+            public ulong colorAttachmentCount;
             
             public IntPtr colorAttachments;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public IntPtr depthStencilAttachment;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public Wgpu.QuerySetImpl occlusionQuerySet;
             
-            public uint timestampWriteCount;
+            public ulong timestampWriteCount;
             
             public IntPtr timestampWrites;
         }
@@ -2696,11 +2611,11 @@ namespace WGPU.NET
             [MarshalAs(UnmanagedType.LPStr)]
             public string entryPoint;
             
-            public uint constantCount;
+            public ulong constantCount;
             
             public IntPtr constants;
             
-            public uint bufferCount;
+            public ulong bufferCount;
             
             public IntPtr buffers;
         }
@@ -2715,11 +2630,11 @@ namespace WGPU.NET
             [MarshalAs(UnmanagedType.LPStr)]
             public string entryPoint;
             
-            public uint constantCount;
+            public ulong constantCount;
             
             public IntPtr constants;
             
-            public uint targetCount;
+            public ulong targetCount;
             
             public IntPtr targets;
         }
@@ -2729,31 +2644,19 @@ namespace WGPU.NET
         {
             public IntPtr nextInChain;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             [MarshalAs(UnmanagedType.LPStr)]
             public string label;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public Wgpu.PipelineLayoutImpl layout;
             
             public Wgpu.VertexState vertex;
             
             public Wgpu.PrimitiveState primitive;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public IntPtr depthStencil;
             
             public Wgpu.MultisampleState multisample;
             
-            /// <summary>
-            /// nullable
-            /// </summary>
             public IntPtr fragment;
         }
         
@@ -2771,14 +2674,6 @@ namespace WGPU.NET
             
             [MarshalAs(UnmanagedType.LPStr)]
             public string dxcPath;
-        }
-        
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public partial struct AdapterExtras
-        {
-            public Wgpu.ChainedStruct chain;
-            
-            public Wgpu.BackendType backend;
         }
         
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -2951,6 +2846,14 @@ namespace WGPU.NET
             public IntPtr viewFormats;
         }
         
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public partial struct InstanceEnumerateAdapterOptions
+        {
+            public IntPtr nextInChain;
+            
+            public uint backends;
+        }
+        
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void BufferMapCallback(Wgpu.BufferMapAsyncStatus status, IntPtr userdata);
         
@@ -2962,9 +2865,6 @@ namespace WGPU.NET
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void CreateRenderPipelineAsyncCallback(Wgpu.CreatePipelineAsyncStatus status, Wgpu.RenderPipelineImpl pipeline, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userdata);
-        
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void DeviceLostCallback(Wgpu.DeviceLostReason reason, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userdata);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ErrorCallback(Wgpu.ErrorType type, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userdata);
@@ -3005,10 +2905,28 @@ namespace WGPU.NET
         public delegate void ProcAdapterRequestDevice(Wgpu.AdapterImpl adapter, in Wgpu.DeviceDescriptor descriptor, Wgpu.RequestDeviceCallback callback, IntPtr userdata);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcAdapterReference(Wgpu.AdapterImpl adapter);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcAdapterRelease(Wgpu.AdapterImpl adapter);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcBindGroupSetLabel(Wgpu.BindGroupImpl bindGroup, [MarshalAs(UnmanagedType.LPStr)] string label);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcBindGroupReference(Wgpu.BindGroupImpl bindGroup);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcBindGroupRelease(Wgpu.BindGroupImpl bindGroup);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcBindGroupLayoutSetLabel(Wgpu.BindGroupLayoutImpl bindGroupLayout, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcBindGroupLayoutReference(Wgpu.BindGroupLayoutImpl bindGroupLayout);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcBindGroupLayoutRelease(Wgpu.BindGroupLayoutImpl bindGroupLayout);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcBufferDestroy(Wgpu.BufferImpl buffer);
@@ -3026,7 +2944,7 @@ namespace WGPU.NET
         public delegate ulong ProcBufferGetSize(Wgpu.BufferImpl buffer);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate Wgpu.BufferUsage ProcBufferGetUsage(Wgpu.BufferImpl buffer);
+        public delegate uint ProcBufferGetUsage(Wgpu.BufferImpl buffer);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcBufferMapAsync(Wgpu.BufferImpl buffer, uint mode, ulong offset, ulong size, Wgpu.BufferMapCallback callback, IntPtr userdata);
@@ -3038,7 +2956,19 @@ namespace WGPU.NET
         public delegate void ProcBufferUnmap(Wgpu.BufferImpl buffer);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcBufferReference(Wgpu.BufferImpl buffer);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcBufferRelease(Wgpu.BufferImpl buffer);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcCommandBufferSetLabel(Wgpu.CommandBufferImpl commandBuffer, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcCommandBufferReference(Wgpu.CommandBufferImpl commandBuffer);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcCommandBufferRelease(Wgpu.CommandBufferImpl commandBuffer);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate Wgpu.ComputePassEncoderImpl ProcCommandEncoderBeginComputePass(Wgpu.CommandEncoderImpl commandEncoder, in Wgpu.ComputePassDescriptor descriptor);
@@ -3083,6 +3013,12 @@ namespace WGPU.NET
         public delegate void ProcCommandEncoderWriteTimestamp(Wgpu.CommandEncoderImpl commandEncoder, Wgpu.QuerySetImpl querySet, uint queryIndex);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcCommandEncoderReference(Wgpu.CommandEncoderImpl commandEncoder);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcCommandEncoderRelease(Wgpu.CommandEncoderImpl commandEncoder);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcComputePassEncoderBeginPipelineStatisticsQuery(Wgpu.ComputePassEncoderImpl computePassEncoder, Wgpu.QuerySetImpl querySet, uint queryIndex);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -3107,7 +3043,7 @@ namespace WGPU.NET
         public delegate void ProcComputePassEncoderPushDebugGroup(Wgpu.ComputePassEncoderImpl computePassEncoder, [MarshalAs(UnmanagedType.LPStr)] string groupLabel);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void ProcComputePassEncoderSetBindGroup(Wgpu.ComputePassEncoderImpl computePassEncoder, uint groupIndex, Wgpu.BindGroupImpl group, uint dynamicOffsetCount, ref uint dynamicOffsets);
+        public delegate void ProcComputePassEncoderSetBindGroup(Wgpu.ComputePassEncoderImpl computePassEncoder, uint groupIndex, Wgpu.BindGroupImpl group, ulong dynamicOffsetCount, ref uint dynamicOffsets);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcComputePassEncoderSetLabel(Wgpu.ComputePassEncoderImpl computePassEncoder, [MarshalAs(UnmanagedType.LPStr)] string label);
@@ -3116,10 +3052,22 @@ namespace WGPU.NET
         public delegate void ProcComputePassEncoderSetPipeline(Wgpu.ComputePassEncoderImpl computePassEncoder, Wgpu.ComputePipelineImpl pipeline);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcComputePassEncoderReference(Wgpu.ComputePassEncoderImpl computePassEncoder);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcComputePassEncoderRelease(Wgpu.ComputePassEncoderImpl computePassEncoder);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate Wgpu.BindGroupLayoutImpl ProcComputePipelineGetBindGroupLayout(Wgpu.ComputePipelineImpl computePipeline, uint groupIndex);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcComputePipelineSetLabel(Wgpu.ComputePipelineImpl computePipeline, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcComputePipelineReference(Wgpu.ComputePipelineImpl computePipeline);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcComputePipelineRelease(Wgpu.ComputePipelineImpl computePipeline);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate Wgpu.BindGroupImpl ProcDeviceCreateBindGroup(Wgpu.DeviceImpl device, in Wgpu.BindGroupDescriptor descriptor);
@@ -3184,20 +3132,22 @@ namespace WGPU.NET
         public delegate bool ProcDeviceHasFeature(Wgpu.DeviceImpl device, Wgpu.FeatureName feature);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        [return:MarshalAs(UnmanagedType.U1)]
-        public delegate bool ProcDevicePopErrorScope(Wgpu.DeviceImpl device, Wgpu.ErrorCallback callback, IntPtr userdata);
+        public delegate void ProcDevicePopErrorScope(Wgpu.DeviceImpl device, Wgpu.ErrorCallback callback, IntPtr userdata);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcDevicePushErrorScope(Wgpu.DeviceImpl device, Wgpu.ErrorFilter filter);
-        
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void ProcDeviceSetDeviceLostCallback(Wgpu.DeviceImpl device, Wgpu.DeviceLostCallback callback, IntPtr userdata);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcDeviceSetLabel(Wgpu.DeviceImpl device, [MarshalAs(UnmanagedType.LPStr)] string label);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcDeviceSetUncapturedErrorCallback(Wgpu.DeviceImpl device, Wgpu.ErrorCallback callback, IntPtr userdata);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcDeviceReference(Wgpu.DeviceImpl device);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcDeviceRelease(Wgpu.DeviceImpl device);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate Wgpu.SurfaceImpl ProcInstanceCreateSurface(Wgpu.InstanceImpl instance, in Wgpu.SurfaceDescriptor descriptor);
@@ -3209,7 +3159,19 @@ namespace WGPU.NET
         public delegate void ProcInstanceRequestAdapter(Wgpu.InstanceImpl instance, in Wgpu.RequestAdapterOptions options, Wgpu.RequestAdapterCallback callback, IntPtr userdata);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcInstanceReference(Wgpu.InstanceImpl instance);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcInstanceRelease(Wgpu.InstanceImpl instance);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcPipelineLayoutSetLabel(Wgpu.PipelineLayoutImpl pipelineLayout, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcPipelineLayoutReference(Wgpu.PipelineLayoutImpl pipelineLayout);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcPipelineLayoutRelease(Wgpu.PipelineLayoutImpl pipelineLayout);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcQuerySetDestroy(Wgpu.QuerySetImpl querySet);
@@ -3224,19 +3186,40 @@ namespace WGPU.NET
         public delegate void ProcQuerySetSetLabel(Wgpu.QuerySetImpl querySet, [MarshalAs(UnmanagedType.LPStr)] string label);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcQuerySetReference(Wgpu.QuerySetImpl querySet);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcQuerySetRelease(Wgpu.QuerySetImpl querySet);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcQueueOnSubmittedWorkDone(Wgpu.QueueImpl queue, Wgpu.QueueWorkDoneCallback callback, IntPtr userdata);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcQueueSetLabel(Wgpu.QueueImpl queue, [MarshalAs(UnmanagedType.LPStr)] string label);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void ProcQueueSubmit(Wgpu.QueueImpl queue, uint commandCount, ref Wgpu.CommandBufferImpl commands);
+        public delegate void ProcQueueSubmit(Wgpu.QueueImpl queue, ulong commandCount, ref Wgpu.CommandBufferImpl commands);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcQueueWriteBuffer(Wgpu.QueueImpl queue, Wgpu.BufferImpl buffer, ulong bufferOffset, IntPtr data, ulong size);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcQueueWriteTexture(Wgpu.QueueImpl queue, in Wgpu.ImageCopyTexture destination, IntPtr data, ulong dataSize, in Wgpu.TextureDataLayout dataLayout, in Wgpu.Extent3D writeSize);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcQueueReference(Wgpu.QueueImpl queue);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcQueueRelease(Wgpu.QueueImpl queue);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcRenderBundleSetLabel(Wgpu.RenderBundleImpl renderBundle, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcRenderBundleReference(Wgpu.RenderBundleImpl renderBundle);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcRenderBundleRelease(Wgpu.RenderBundleImpl renderBundle);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcRenderBundleEncoderDraw(Wgpu.RenderBundleEncoderImpl renderBundleEncoder, uint vertexCount, uint instanceCount, uint firstVertex, uint firstInstance);
@@ -3263,7 +3246,7 @@ namespace WGPU.NET
         public delegate void ProcRenderBundleEncoderPushDebugGroup(Wgpu.RenderBundleEncoderImpl renderBundleEncoder, [MarshalAs(UnmanagedType.LPStr)] string groupLabel);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void ProcRenderBundleEncoderSetBindGroup(Wgpu.RenderBundleEncoderImpl renderBundleEncoder, uint groupIndex, Wgpu.BindGroupImpl group, uint dynamicOffsetCount, ref uint dynamicOffsets);
+        public delegate void ProcRenderBundleEncoderSetBindGroup(Wgpu.RenderBundleEncoderImpl renderBundleEncoder, uint groupIndex, Wgpu.BindGroupImpl group, ulong dynamicOffsetCount, ref uint dynamicOffsets);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcRenderBundleEncoderSetIndexBuffer(Wgpu.RenderBundleEncoderImpl renderBundleEncoder, Wgpu.BufferImpl buffer, Wgpu.IndexFormat format, ulong offset, ulong size);
@@ -3276,6 +3259,12 @@ namespace WGPU.NET
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcRenderBundleEncoderSetVertexBuffer(Wgpu.RenderBundleEncoderImpl renderBundleEncoder, uint slot, Wgpu.BufferImpl buffer, ulong offset, ulong size);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcRenderBundleEncoderReference(Wgpu.RenderBundleEncoderImpl renderBundleEncoder);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcRenderBundleEncoderRelease(Wgpu.RenderBundleEncoderImpl renderBundleEncoder);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcRenderPassEncoderBeginOcclusionQuery(Wgpu.RenderPassEncoderImpl renderPassEncoder, uint queryIndex);
@@ -3305,7 +3294,7 @@ namespace WGPU.NET
         public delegate void ProcRenderPassEncoderEndPipelineStatisticsQuery(Wgpu.RenderPassEncoderImpl renderPassEncoder);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void ProcRenderPassEncoderExecuteBundles(Wgpu.RenderPassEncoderImpl renderPassEncoder, uint bundleCount, ref Wgpu.RenderBundleImpl bundles);
+        public delegate void ProcRenderPassEncoderExecuteBundles(Wgpu.RenderPassEncoderImpl renderPassEncoder, ulong bundleCount, ref Wgpu.RenderBundleImpl bundles);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcRenderPassEncoderInsertDebugMarker(Wgpu.RenderPassEncoderImpl renderPassEncoder, [MarshalAs(UnmanagedType.LPStr)] string markerLabel);
@@ -3317,7 +3306,7 @@ namespace WGPU.NET
         public delegate void ProcRenderPassEncoderPushDebugGroup(Wgpu.RenderPassEncoderImpl renderPassEncoder, [MarshalAs(UnmanagedType.LPStr)] string groupLabel);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void ProcRenderPassEncoderSetBindGroup(Wgpu.RenderPassEncoderImpl renderPassEncoder, uint groupIndex, Wgpu.BindGroupImpl group, uint dynamicOffsetCount, ref uint dynamicOffsets);
+        public delegate void ProcRenderPassEncoderSetBindGroup(Wgpu.RenderPassEncoderImpl renderPassEncoder, uint groupIndex, Wgpu.BindGroupImpl group, ulong dynamicOffsetCount, ref uint dynamicOffsets);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcRenderPassEncoderSetBlendConstant(Wgpu.RenderPassEncoderImpl renderPassEncoder, in Wgpu.Color color);
@@ -3344,13 +3333,31 @@ namespace WGPU.NET
         public delegate void ProcRenderPassEncoderSetViewport(Wgpu.RenderPassEncoderImpl renderPassEncoder, float x, float y, float width, float height, float minDepth, float maxDepth);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcRenderPassEncoderReference(Wgpu.RenderPassEncoderImpl renderPassEncoder);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcRenderPassEncoderRelease(Wgpu.RenderPassEncoderImpl renderPassEncoder);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate Wgpu.BindGroupLayoutImpl ProcRenderPipelineGetBindGroupLayout(Wgpu.RenderPipelineImpl renderPipeline, uint groupIndex);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcRenderPipelineSetLabel(Wgpu.RenderPipelineImpl renderPipeline, [MarshalAs(UnmanagedType.LPStr)] string label);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcRenderPipelineReference(Wgpu.RenderPipelineImpl renderPipeline);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcRenderPipelineRelease(Wgpu.RenderPipelineImpl renderPipeline);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcSamplerSetLabel(Wgpu.SamplerImpl sampler, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcSamplerReference(Wgpu.SamplerImpl sampler);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcSamplerRelease(Wgpu.SamplerImpl sampler);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcShaderModuleGetCompilationInfo(Wgpu.ShaderModuleImpl shaderModule, Wgpu.CompilationInfoCallback callback, IntPtr userdata);
@@ -3359,13 +3366,31 @@ namespace WGPU.NET
         public delegate void ProcShaderModuleSetLabel(Wgpu.ShaderModuleImpl shaderModule, [MarshalAs(UnmanagedType.LPStr)] string label);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcShaderModuleReference(Wgpu.ShaderModuleImpl shaderModule);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcShaderModuleRelease(Wgpu.ShaderModuleImpl shaderModule);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate Wgpu.TextureFormat ProcSurfaceGetPreferredFormat(Wgpu.SurfaceImpl surface, Wgpu.AdapterImpl adapter);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcSurfaceReference(Wgpu.SurfaceImpl surface);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcSurfaceRelease(Wgpu.SurfaceImpl surface);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate Wgpu.TextureViewImpl ProcSwapChainGetCurrentTextureView(Wgpu.SwapChainImpl swapChain);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcSwapChainPresent(Wgpu.SwapChainImpl swapChain);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcSwapChainReference(Wgpu.SwapChainImpl swapChain);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcSwapChainRelease(Wgpu.SwapChainImpl swapChain);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate Wgpu.TextureViewImpl ProcTextureCreateView(Wgpu.TextureImpl texture, in Wgpu.TextureViewDescriptor descriptor);
@@ -3392,7 +3417,7 @@ namespace WGPU.NET
         public delegate uint ProcTextureGetSampleCount(Wgpu.TextureImpl texture);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate Wgpu.TextureUsage ProcTextureGetUsage(Wgpu.TextureImpl texture);
+        public delegate uint ProcTextureGetUsage(Wgpu.TextureImpl texture);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate uint ProcTextureGetWidth(Wgpu.TextureImpl texture);
@@ -3401,7 +3426,19 @@ namespace WGPU.NET
         public delegate void ProcTextureSetLabel(Wgpu.TextureImpl texture, [MarshalAs(UnmanagedType.LPStr)] string label);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcTextureReference(Wgpu.TextureImpl texture);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcTextureRelease(Wgpu.TextureImpl texture);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void ProcTextureViewSetLabel(Wgpu.TextureViewImpl textureView, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcTextureViewReference(Wgpu.TextureViewImpl textureView);
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void ProcTextureViewRelease(Wgpu.TextureViewImpl textureView);
         
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void LogCallback(Wgpu.LogLevel level, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userdata);
@@ -3432,17 +3469,35 @@ namespace WGPU.NET
         [DllImport("libwgpu_native", EntryPoint = "wgpuAdapterRequestDevice", CallingConvention = CallingConvention.Cdecl)]
         public static extern void AdapterRequestDevice(Wgpu.AdapterImpl adapter, in Wgpu.DeviceDescriptor descriptor, Wgpu.RequestDeviceCallback callback, IntPtr userdata);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuAdapterReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void AdapterReference(Wgpu.AdapterImpl adapter);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuAdapterRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void AdapterRelease(Wgpu.AdapterImpl adapter);
+        
         /// <summary>
         /// Methods of BindGroup
         /// </summary>
         [DllImport("libwgpu_native", EntryPoint = "wgpuBindGroupSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void BindGroupSetLabel(Wgpu.BindGroupImpl bindGroup, [MarshalAs(UnmanagedType.LPStr)] string label);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuBindGroupReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void BindGroupReference(Wgpu.BindGroupImpl bindGroup);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuBindGroupRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void BindGroupRelease(Wgpu.BindGroupImpl bindGroup);
+        
         /// <summary>
         /// Methods of BindGroupLayout
         /// </summary>
         [DllImport("libwgpu_native", EntryPoint = "wgpuBindGroupLayoutSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void BindGroupLayoutSetLabel(Wgpu.BindGroupLayoutImpl bindGroupLayout, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuBindGroupLayoutReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void BindGroupLayoutReference(Wgpu.BindGroupLayoutImpl bindGroupLayout);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuBindGroupLayoutRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void BindGroupLayoutRelease(Wgpu.BindGroupLayoutImpl bindGroupLayout);
         
         /// <summary>
         /// Methods of Buffer
@@ -3463,7 +3518,7 @@ namespace WGPU.NET
         public static extern ulong BufferGetSize(Wgpu.BufferImpl buffer);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuBufferGetUsage", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Wgpu.BufferUsage BufferGetUsage(Wgpu.BufferImpl buffer);
+        public static extern uint BufferGetUsage(Wgpu.BufferImpl buffer);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuBufferMapAsync", CallingConvention = CallingConvention.Cdecl)]
         public static extern void BufferMapAsync(Wgpu.BufferImpl buffer, uint mode, ulong offset, ulong size, Wgpu.BufferMapCallback callback, IntPtr userdata);
@@ -3474,11 +3529,23 @@ namespace WGPU.NET
         [DllImport("libwgpu_native", EntryPoint = "wgpuBufferUnmap", CallingConvention = CallingConvention.Cdecl)]
         public static extern void BufferUnmap(Wgpu.BufferImpl buffer);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuBufferReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void BufferReference(Wgpu.BufferImpl buffer);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuBufferRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void BufferRelease(Wgpu.BufferImpl buffer);
+        
         /// <summary>
         /// Methods of CommandBuffer
         /// </summary>
         [DllImport("libwgpu_native", EntryPoint = "wgpuCommandBufferSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void CommandBufferSetLabel(Wgpu.CommandBufferImpl commandBuffer, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuCommandBufferReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void CommandBufferReference(Wgpu.CommandBufferImpl commandBuffer);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuCommandBufferRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void CommandBufferRelease(Wgpu.CommandBufferImpl commandBuffer);
         
         /// <summary>
         /// Methods of CommandEncoder
@@ -3525,6 +3592,12 @@ namespace WGPU.NET
         [DllImport("libwgpu_native", EntryPoint = "wgpuCommandEncoderWriteTimestamp", CallingConvention = CallingConvention.Cdecl)]
         public static extern void CommandEncoderWriteTimestamp(Wgpu.CommandEncoderImpl commandEncoder, Wgpu.QuerySetImpl querySet, uint queryIndex);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuCommandEncoderReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void CommandEncoderReference(Wgpu.CommandEncoderImpl commandEncoder);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuCommandEncoderRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void CommandEncoderRelease(Wgpu.CommandEncoderImpl commandEncoder);
+        
         /// <summary>
         /// Methods of ComputePassEncoder
         /// </summary>
@@ -3553,13 +3626,19 @@ namespace WGPU.NET
         public static extern void ComputePassEncoderPushDebugGroup(Wgpu.ComputePassEncoderImpl computePassEncoder, [MarshalAs(UnmanagedType.LPStr)] string groupLabel);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuComputePassEncoderSetBindGroup", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void ComputePassEncoderSetBindGroup(Wgpu.ComputePassEncoderImpl computePassEncoder, uint groupIndex, Wgpu.BindGroupImpl group, uint dynamicOffsetCount, ref uint dynamicOffsets);
+        public static extern void ComputePassEncoderSetBindGroup(Wgpu.ComputePassEncoderImpl computePassEncoder, uint groupIndex, Wgpu.BindGroupImpl group, ulong dynamicOffsetCount, ref uint dynamicOffsets);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuComputePassEncoderSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void ComputePassEncoderSetLabel(Wgpu.ComputePassEncoderImpl computePassEncoder, [MarshalAs(UnmanagedType.LPStr)] string label);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuComputePassEncoderSetPipeline", CallingConvention = CallingConvention.Cdecl)]
         public static extern void ComputePassEncoderSetPipeline(Wgpu.ComputePassEncoderImpl computePassEncoder, Wgpu.ComputePipelineImpl pipeline);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuComputePassEncoderReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void ComputePassEncoderReference(Wgpu.ComputePassEncoderImpl computePassEncoder);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuComputePassEncoderRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void ComputePassEncoderRelease(Wgpu.ComputePassEncoderImpl computePassEncoder);
         
         /// <summary>
         /// Methods of ComputePipeline
@@ -3569,6 +3648,12 @@ namespace WGPU.NET
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuComputePipelineSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void ComputePipelineSetLabel(Wgpu.ComputePipelineImpl computePipeline, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuComputePipelineReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void ComputePipelineReference(Wgpu.ComputePipelineImpl computePipeline);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuComputePipelineRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void ComputePipelineRelease(Wgpu.ComputePipelineImpl computePipeline);
         
         /// <summary>
         /// Methods of Device
@@ -3636,20 +3721,22 @@ namespace WGPU.NET
         public static extern bool DeviceHasFeature(Wgpu.DeviceImpl device, Wgpu.FeatureName feature);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuDevicePopErrorScope", CallingConvention = CallingConvention.Cdecl)]
-        [return:MarshalAs(UnmanagedType.U1)]
-        public static extern bool DevicePopErrorScope(Wgpu.DeviceImpl device, Wgpu.ErrorCallback callback, IntPtr userdata);
+        public static extern void DevicePopErrorScope(Wgpu.DeviceImpl device, Wgpu.ErrorCallback callback, IntPtr userdata);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuDevicePushErrorScope", CallingConvention = CallingConvention.Cdecl)]
         public static extern void DevicePushErrorScope(Wgpu.DeviceImpl device, Wgpu.ErrorFilter filter);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuDeviceSetDeviceLostCallback", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void DeviceSetDeviceLostCallback(Wgpu.DeviceImpl device, Wgpu.DeviceLostCallback callback, IntPtr userdata);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuDeviceSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void DeviceSetLabel(Wgpu.DeviceImpl device, [MarshalAs(UnmanagedType.LPStr)] string label);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuDeviceSetUncapturedErrorCallback", CallingConvention = CallingConvention.Cdecl)]
         public static extern void DeviceSetUncapturedErrorCallback(Wgpu.DeviceImpl device, Wgpu.ErrorCallback callback, IntPtr userdata);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuDeviceReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void DeviceReference(Wgpu.DeviceImpl device);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuDeviceRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void DeviceRelease(Wgpu.DeviceImpl device);
         
         /// <summary>
         /// Methods of Instance
@@ -3663,11 +3750,23 @@ namespace WGPU.NET
         [DllImport("libwgpu_native", EntryPoint = "wgpuInstanceRequestAdapter", CallingConvention = CallingConvention.Cdecl)]
         public static extern void InstanceRequestAdapter(Wgpu.InstanceImpl instance, in Wgpu.RequestAdapterOptions options, Wgpu.RequestAdapterCallback callback, IntPtr userdata);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuInstanceReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void InstanceReference(Wgpu.InstanceImpl instance);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuInstanceRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void InstanceRelease(Wgpu.InstanceImpl instance);
+        
         /// <summary>
         /// Methods of PipelineLayout
         /// </summary>
         [DllImport("libwgpu_native", EntryPoint = "wgpuPipelineLayoutSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void PipelineLayoutSetLabel(Wgpu.PipelineLayoutImpl pipelineLayout, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuPipelineLayoutReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void PipelineLayoutReference(Wgpu.PipelineLayoutImpl pipelineLayout);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuPipelineLayoutRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void PipelineLayoutRelease(Wgpu.PipelineLayoutImpl pipelineLayout);
         
         /// <summary>
         /// Methods of QuerySet
@@ -3684,6 +3783,12 @@ namespace WGPU.NET
         [DllImport("libwgpu_native", EntryPoint = "wgpuQuerySetSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void QuerySetSetLabel(Wgpu.QuerySetImpl querySet, [MarshalAs(UnmanagedType.LPStr)] string label);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuQuerySetReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void QuerySetReference(Wgpu.QuerySetImpl querySet);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuQuerySetRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void QuerySetRelease(Wgpu.QuerySetImpl querySet);
+        
         /// <summary>
         /// Methods of Queue
         /// </summary>
@@ -3694,13 +3799,31 @@ namespace WGPU.NET
         public static extern void QueueSetLabel(Wgpu.QueueImpl queue, [MarshalAs(UnmanagedType.LPStr)] string label);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuQueueSubmit", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void QueueSubmit(Wgpu.QueueImpl queue, uint commandCount, ref Wgpu.CommandBufferImpl commands);
+        public static extern void QueueSubmit(Wgpu.QueueImpl queue, ulong commandCount, ref Wgpu.CommandBufferImpl commands);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuQueueWriteBuffer", CallingConvention = CallingConvention.Cdecl)]
         public static extern void QueueWriteBuffer(Wgpu.QueueImpl queue, Wgpu.BufferImpl buffer, ulong bufferOffset, IntPtr data, ulong size);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuQueueWriteTexture", CallingConvention = CallingConvention.Cdecl)]
         public static extern void QueueWriteTexture(Wgpu.QueueImpl queue, in Wgpu.ImageCopyTexture destination, IntPtr data, ulong dataSize, in Wgpu.TextureDataLayout dataLayout, in Wgpu.Extent3D writeSize);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuQueueReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void QueueReference(Wgpu.QueueImpl queue);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuQueueRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void QueueRelease(Wgpu.QueueImpl queue);
+        
+        /// <summary>
+        /// Methods of RenderBundle
+        /// </summary>
+        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderBundleSetLabel", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void RenderBundleSetLabel(Wgpu.RenderBundleImpl renderBundle, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderBundleReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void RenderBundleReference(Wgpu.RenderBundleImpl renderBundle);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderBundleRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void RenderBundleRelease(Wgpu.RenderBundleImpl renderBundle);
         
         /// <summary>
         /// Methods of RenderBundleEncoder
@@ -3730,7 +3853,7 @@ namespace WGPU.NET
         public static extern void RenderBundleEncoderPushDebugGroup(Wgpu.RenderBundleEncoderImpl renderBundleEncoder, [MarshalAs(UnmanagedType.LPStr)] string groupLabel);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuRenderBundleEncoderSetBindGroup", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void RenderBundleEncoderSetBindGroup(Wgpu.RenderBundleEncoderImpl renderBundleEncoder, uint groupIndex, Wgpu.BindGroupImpl group, uint dynamicOffsetCount, ref uint dynamicOffsets);
+        public static extern void RenderBundleEncoderSetBindGroup(Wgpu.RenderBundleEncoderImpl renderBundleEncoder, uint groupIndex, Wgpu.BindGroupImpl group, ulong dynamicOffsetCount, ref uint dynamicOffsets);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuRenderBundleEncoderSetIndexBuffer", CallingConvention = CallingConvention.Cdecl)]
         public static extern void RenderBundleEncoderSetIndexBuffer(Wgpu.RenderBundleEncoderImpl renderBundleEncoder, Wgpu.BufferImpl buffer, Wgpu.IndexFormat format, ulong offset, ulong size);
@@ -3743,6 +3866,12 @@ namespace WGPU.NET
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuRenderBundleEncoderSetVertexBuffer", CallingConvention = CallingConvention.Cdecl)]
         public static extern void RenderBundleEncoderSetVertexBuffer(Wgpu.RenderBundleEncoderImpl renderBundleEncoder, uint slot, Wgpu.BufferImpl buffer, ulong offset, ulong size);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderBundleEncoderReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void RenderBundleEncoderReference(Wgpu.RenderBundleEncoderImpl renderBundleEncoder);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderBundleEncoderRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void RenderBundleEncoderRelease(Wgpu.RenderBundleEncoderImpl renderBundleEncoder);
         
         /// <summary>
         /// Methods of RenderPassEncoder
@@ -3775,7 +3904,7 @@ namespace WGPU.NET
         public static extern void RenderPassEncoderEndPipelineStatisticsQuery(Wgpu.RenderPassEncoderImpl renderPassEncoder);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPassEncoderExecuteBundles", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void RenderPassEncoderExecuteBundles(Wgpu.RenderPassEncoderImpl renderPassEncoder, uint bundleCount, ref Wgpu.RenderBundleImpl bundles);
+        public static extern void RenderPassEncoderExecuteBundles(Wgpu.RenderPassEncoderImpl renderPassEncoder, ulong bundleCount, ref Wgpu.RenderBundleImpl bundles);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPassEncoderInsertDebugMarker", CallingConvention = CallingConvention.Cdecl)]
         public static extern void RenderPassEncoderInsertDebugMarker(Wgpu.RenderPassEncoderImpl renderPassEncoder, [MarshalAs(UnmanagedType.LPStr)] string markerLabel);
@@ -3787,7 +3916,7 @@ namespace WGPU.NET
         public static extern void RenderPassEncoderPushDebugGroup(Wgpu.RenderPassEncoderImpl renderPassEncoder, [MarshalAs(UnmanagedType.LPStr)] string groupLabel);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPassEncoderSetBindGroup", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void RenderPassEncoderSetBindGroup(Wgpu.RenderPassEncoderImpl renderPassEncoder, uint groupIndex, Wgpu.BindGroupImpl group, uint dynamicOffsetCount, ref uint dynamicOffsets);
+        public static extern void RenderPassEncoderSetBindGroup(Wgpu.RenderPassEncoderImpl renderPassEncoder, uint groupIndex, Wgpu.BindGroupImpl group, ulong dynamicOffsetCount, ref uint dynamicOffsets);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPassEncoderSetBlendConstant", CallingConvention = CallingConvention.Cdecl)]
         public static extern void RenderPassEncoderSetBlendConstant(Wgpu.RenderPassEncoderImpl renderPassEncoder, in Wgpu.Color color);
@@ -3813,6 +3942,12 @@ namespace WGPU.NET
         [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPassEncoderSetViewport", CallingConvention = CallingConvention.Cdecl)]
         public static extern void RenderPassEncoderSetViewport(Wgpu.RenderPassEncoderImpl renderPassEncoder, float x, float y, float width, float height, float minDepth, float maxDepth);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPassEncoderReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void RenderPassEncoderReference(Wgpu.RenderPassEncoderImpl renderPassEncoder);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPassEncoderRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void RenderPassEncoderRelease(Wgpu.RenderPassEncoderImpl renderPassEncoder);
+        
         /// <summary>
         /// Methods of RenderPipeline
         /// </summary>
@@ -3822,11 +3957,23 @@ namespace WGPU.NET
         [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPipelineSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void RenderPipelineSetLabel(Wgpu.RenderPipelineImpl renderPipeline, [MarshalAs(UnmanagedType.LPStr)] string label);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPipelineReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void RenderPipelineReference(Wgpu.RenderPipelineImpl renderPipeline);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPipelineRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void RenderPipelineRelease(Wgpu.RenderPipelineImpl renderPipeline);
+        
         /// <summary>
         /// Methods of Sampler
         /// </summary>
         [DllImport("libwgpu_native", EntryPoint = "wgpuSamplerSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void SamplerSetLabel(Wgpu.SamplerImpl sampler, [MarshalAs(UnmanagedType.LPStr)] string label);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuSamplerReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SamplerReference(Wgpu.SamplerImpl sampler);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuSamplerRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SamplerRelease(Wgpu.SamplerImpl sampler);
         
         /// <summary>
         /// Methods of ShaderModule
@@ -3837,11 +3984,23 @@ namespace WGPU.NET
         [DllImport("libwgpu_native", EntryPoint = "wgpuShaderModuleSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void ShaderModuleSetLabel(Wgpu.ShaderModuleImpl shaderModule, [MarshalAs(UnmanagedType.LPStr)] string label);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuShaderModuleReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void ShaderModuleReference(Wgpu.ShaderModuleImpl shaderModule);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuShaderModuleRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void ShaderModuleRelease(Wgpu.ShaderModuleImpl shaderModule);
+        
         /// <summary>
         /// Methods of Surface
         /// </summary>
         [DllImport("libwgpu_native", EntryPoint = "wgpuSurfaceGetPreferredFormat", CallingConvention = CallingConvention.Cdecl)]
         public static extern Wgpu.TextureFormat SurfaceGetPreferredFormat(Wgpu.SurfaceImpl surface, Wgpu.AdapterImpl adapter);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuSurfaceReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SurfaceReference(Wgpu.SurfaceImpl surface);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuSurfaceRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SurfaceRelease(Wgpu.SurfaceImpl surface);
         
         /// <summary>
         /// Methods of SwapChain
@@ -3851,6 +4010,12 @@ namespace WGPU.NET
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuSwapChainPresent", CallingConvention = CallingConvention.Cdecl)]
         public static extern void SwapChainPresent(Wgpu.SwapChainImpl swapChain);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuSwapChainReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SwapChainReference(Wgpu.SwapChainImpl swapChain);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuSwapChainRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SwapChainRelease(Wgpu.SwapChainImpl swapChain);
         
         /// <summary>
         /// Methods of Texture
@@ -3880,7 +4045,7 @@ namespace WGPU.NET
         public static extern uint TextureGetSampleCount(Wgpu.TextureImpl texture);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuTextureGetUsage", CallingConvention = CallingConvention.Cdecl)]
-        public static extern Wgpu.TextureUsage TextureGetUsage(Wgpu.TextureImpl texture);
+        public static extern uint TextureGetUsage(Wgpu.TextureImpl texture);
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuTextureGetWidth", CallingConvention = CallingConvention.Cdecl)]
         public static extern uint TextureGetWidth(Wgpu.TextureImpl texture);
@@ -3888,17 +4053,32 @@ namespace WGPU.NET
         [DllImport("libwgpu_native", EntryPoint = "wgpuTextureSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void TextureSetLabel(Wgpu.TextureImpl texture, [MarshalAs(UnmanagedType.LPStr)] string label);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuTextureReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void TextureReference(Wgpu.TextureImpl texture);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuTextureRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void TextureRelease(Wgpu.TextureImpl texture);
+        
         /// <summary>
         /// Methods of TextureView
         /// </summary>
         [DllImport("libwgpu_native", EntryPoint = "wgpuTextureViewSetLabel", CallingConvention = CallingConvention.Cdecl)]
         public static extern void TextureViewSetLabel(Wgpu.TextureViewImpl textureView, [MarshalAs(UnmanagedType.LPStr)] string label);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuTextureViewReference", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void TextureViewReference(Wgpu.TextureViewImpl textureView);
+        
+        [DllImport("libwgpu_native", EntryPoint = "wgpuTextureViewRelease", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void TextureViewRelease(Wgpu.TextureViewImpl textureView);
+        
         [DllImport("libwgpu_native", EntryPoint = "wgpuGenerateReport", CallingConvention = CallingConvention.Cdecl)]
         public static extern void GenerateReport(Wgpu.InstanceImpl instance, ref Wgpu.GlobalReport report);
         
+        [DllImport("libwgpu_native", EntryPoint = "wgpuInstanceEnumerateAdapters", CallingConvention = CallingConvention.Cdecl)]
+        public static extern ulong InstanceEnumerateAdapters(Wgpu.InstanceImpl instance, in Wgpu.InstanceEnumerateAdapterOptions options, ref Wgpu.AdapterImpl adapters);
+        
         [DllImport("libwgpu_native", EntryPoint = "wgpuQueueSubmitForIndex", CallingConvention = CallingConvention.Cdecl)]
-        public static extern ulong QueueSubmitForIndex(Wgpu.QueueImpl queue, uint commandCount, ref Wgpu.CommandBufferImpl commands);
+        public static extern ulong QueueSubmitForIndex(Wgpu.QueueImpl queue, ulong commandCount, ref Wgpu.CommandBufferImpl commands);
         
         /// <summary>
         /// Returns true if the queue is empty, or false if there are more queue submissions still in flight.
@@ -3933,71 +4113,5 @@ namespace WGPU.NET
         
         [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPassEncoderMultiDrawIndexedIndirectCount", CallingConvention = CallingConvention.Cdecl)]
         public static extern void RenderPassEncoderMultiDrawIndexedIndirectCount(Wgpu.RenderPassEncoderImpl encoder, Wgpu.BufferImpl buffer, ulong offset, Wgpu.BufferImpl countbuffer, ulong countbufferoffset, uint maxcount);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuInstanceDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void InstanceDrop(Wgpu.InstanceImpl instance);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuAdapterDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void AdapterDrop(Wgpu.AdapterImpl adapter);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuBindGroupDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void BindGroupDrop(Wgpu.BindGroupImpl bindGroup);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuBindGroupLayoutDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void BindGroupLayoutDrop(Wgpu.BindGroupLayoutImpl bindGroupLayout);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuBufferDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void BufferDrop(Wgpu.BufferImpl buffer);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuCommandBufferDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void CommandBufferDrop(Wgpu.CommandBufferImpl commandBuffer);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuCommandEncoderDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void CommandEncoderDrop(Wgpu.CommandEncoderImpl commandEncoder);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPassEncoderDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void RenderPassEncoderDrop(Wgpu.RenderPassEncoderImpl renderPassEncoder);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuComputePassEncoderDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void ComputePassEncoderDrop(Wgpu.ComputePassEncoderImpl computePassEncoder);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderBundleEncoderDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void RenderBundleEncoderDrop(Wgpu.RenderBundleEncoderImpl renderBundleEncoder);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuComputePipelineDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void ComputePipelineDrop(Wgpu.ComputePipelineImpl computePipeline);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuDeviceDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void DeviceDrop(Wgpu.DeviceImpl device);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuPipelineLayoutDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void PipelineLayoutDrop(Wgpu.PipelineLayoutImpl pipelineLayout);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuQuerySetDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void QuerySetDrop(Wgpu.QuerySetImpl querySet);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderBundleDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void RenderBundleDrop(Wgpu.RenderBundleImpl renderBundle);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuRenderPipelineDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void RenderPipelineDrop(Wgpu.RenderPipelineImpl renderPipeline);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuSamplerDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SamplerDrop(Wgpu.SamplerImpl sampler);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuShaderModuleDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void ShaderModuleDrop(Wgpu.ShaderModuleImpl shaderModule);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuSurfaceDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SurfaceDrop(Wgpu.SurfaceImpl surface);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuSwapChainDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SwapChainDrop(Wgpu.SwapChainImpl swapChain);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuTextureDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void TextureDrop(Wgpu.TextureImpl texture);
-        
-        [DllImport("libwgpu_native", EntryPoint = "wgpuTextureViewDrop", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void TextureViewDrop(Wgpu.TextureViewImpl textureView);
     }
 }

@@ -4,7 +4,7 @@ using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
-    public class BindGroupLayout
+    public class BindGroupLayout : IDisposable
     {
         private static Dictionary<BindGroupLayoutImpl, BindGroupLayout> instances =
             new Dictionary<BindGroupLayoutImpl, BindGroupLayout>();
@@ -35,12 +35,9 @@ namespace WGPU.NET
         internal static BindGroupLayout For(BindGroupLayoutImpl impl)
             => impl.Handle == IntPtr.Zero ? null : instances.GetOrCreate(impl, () => new BindGroupLayout(impl));
         
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="BindGroupLayout"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+        public void Dispose()
         {
-            BindGroupLayoutDrop(Impl);
+            BindGroupLayoutRelease(Impl);
             Impl = default;
         }
     }

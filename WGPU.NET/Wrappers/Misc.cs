@@ -3,7 +3,7 @@ using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
-    public class ComputePipeline
+    public class ComputePipeline : IDisposable
     {
         private ComputePipelineImpl _impl;
 
@@ -33,17 +33,14 @@ namespace WGPU.NET
 
         public void SetLabel(string label) => ComputePipelineSetLabel(Impl, label);
         
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="RenderBundle"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+        public void Dispose()
         {
-            ComputePipelineDrop(Impl);
+            ComputePipelineRelease(Impl);
             Impl = default;
         }
     }
 
-    public class PipelineLayout
+    public class PipelineLayout : IDisposable
     {
         private PipelineLayoutImpl _impl;
 
@@ -67,18 +64,15 @@ namespace WGPU.NET
 
             Impl = impl;
         }
-
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="FreeHandle"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+        
+        public void Dispose()
         {
-            PipelineLayoutDrop(Impl);
+            PipelineLayoutRelease(Impl);
             Impl = default;
         }
     }
 
-    public class QuerySet
+    public class QuerySet : IDisposable
     {
         private QuerySetImpl _impl;
 
@@ -102,27 +96,16 @@ namespace WGPU.NET
 
             private set => _impl = value;
         }
-
-        /// <summary>
-        /// Destroys the GPU Resource associated with this <see cref="QuerySet"/>
-        /// </summary>
-        public void DestroyResource()
+        
+        public void Dispose()
         {
             QuerySetDestroy(Impl);
-            Impl = default;
-        }
-
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="QuerySet"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
-        {
-            QuerySetDrop(Impl);
+            QuerySetRelease(Impl);
             Impl = default;
         }
     }
 
-    public class RenderPipeline
+    public class RenderPipeline : IDisposable
     {
         private RenderPipelineImpl _impl;
 
@@ -151,18 +134,15 @@ namespace WGPU.NET
             => BindGroupLayout.For(RenderPipelineGetBindGroupLayout(Impl, groupIndex));
 
         public void SetLabel(string label) => RenderPipelineSetLabel(Impl, label);
-
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="RenderPipeline"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+        
+        public void Dispose()
         {
-            RenderPipelineDrop(Impl);
+            RenderPipelineRelease(Impl);
             Impl = default;
         }
     }
 
-    public class Sampler
+    public class Sampler : IDisposable
     {
         private SamplerImpl _impl;
 
@@ -186,18 +166,15 @@ namespace WGPU.NET
 
             Impl = impl;
         }
-
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="Sampler"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+        
+        public void Dispose()
         {
-            SamplerDrop(Impl);
+            SamplerRelease(Impl);
             Impl = default;
         }
     }
 
-    public class ShaderModule
+    public class ShaderModule : IDisposable
     {
         private ShaderModuleImpl _impl;
 
@@ -235,13 +212,10 @@ namespace WGPU.NET
         }
 
         public void SetLabel(string label) => ShaderModuleSetLabel(Impl, label);
-
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="ShaderModule"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+        
+        public void Dispose()
         {
-            ShaderModuleDrop(Impl);
+            ShaderModuleRelease(Impl);
             Impl = default;
         }
     }
@@ -249,7 +223,7 @@ namespace WGPU.NET
     public delegate void CompilationInfoCallback(CompilationInfoRequestStatus status,
         ReadOnlySpan<CompilationMessage> messages);
 
-    public class SwapChain
+    public class SwapChain : IDisposable
     {
         private SwapChainImpl _impl;
 
@@ -257,20 +231,26 @@ namespace WGPU.NET
         {
             if (impl.Handle == IntPtr.Zero)
                 throw new ResourceCreationError(nameof(SwapChain));
-
+            
             _impl = impl;
         }
 
-        public TextureView GetCurrentTextureView()
-            => TextureView.For(SwapChainGetCurrentTextureView(_impl));
+        public TextureView GetCurrentTextureView() => TextureView.CreateUntracked(SwapChainGetCurrentTextureView(_impl));
 
         public void Present()
             => SwapChainPresent(_impl);
+
+        public void Dispose()
+        {
+            TextureView.Forget(SwapChainGetCurrentTextureView(_impl));
+            SwapChainRelease(_impl);
+            _impl = default;
+        }
     }
 
     public delegate void QueueWorkDoneCallback(QueueWorkDoneStatus status); 
 
-    public class CommandBuffer
+    public class CommandBuffer : IDisposable
     {
         private CommandBufferImpl _impl;
 
@@ -294,18 +274,15 @@ namespace WGPU.NET
 
             Impl = impl;
         }
-
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="CommandBuffer"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+        
+        public void Dispose()
         {
-            CommandBufferDrop(Impl);
+            CommandBufferRelease(Impl);
             Impl = default;
         }
     }
 
-    public class RenderBundle
+    public class RenderBundle : IDisposable
     {
         private RenderBundleImpl _impl;
 
@@ -328,13 +305,10 @@ namespace WGPU.NET
                 throw new ResourceCreationError(nameof(RenderBundle));
             Impl = impl;
         }
-
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="RenderBundle"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+        
+        public void Dispose()
         {
-            RenderBundleDrop(Impl);
+            RenderBundleRelease(Impl);
             Impl = default;
         }
     }

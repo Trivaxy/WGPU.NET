@@ -6,7 +6,7 @@ using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
-    public class RenderPassEncoder
+    public class RenderPassEncoder : IDisposable
     {
         private RenderPassEncoderImpl _impl;
 
@@ -44,11 +44,12 @@ namespace WGPU.NET
 
         public unsafe void ExecuteBundles(RenderBundle[] bundles)
         {
-            RenderPassEncoderExecuteBundles(_impl, (uint)bundles.Length,
-                ref Unsafe.AsRef<RenderBundleImpl>(
-                    (void*)Util.AllocHArray(bundles.Length, bundles.Select(x => x.Impl))
-                )
-            );
+            Span<RenderBundleImpl> innerBundles = stackalloc RenderBundleImpl[bundles.Length];
+
+            for (int i = 0; i < bundles.Length; i++)
+                innerBundles[i] = bundles[i].Impl;
+
+            RenderPassEncoderExecuteBundles(_impl, (uint)bundles.Length, ref innerBundles.GetPinnableReference());
         }
 
         public void InsertDebugMarker(string markerLabel)
@@ -61,11 +62,14 @@ namespace WGPU.NET
 
         public unsafe void SetBindGroup(uint groupIndex, BindGroup group, uint[] dynamicOffsets)
         {
-            RenderPassEncoderSetBindGroup(_impl, groupIndex,
-                group.Impl,
-                (uint)dynamicOffsets.Length,
-                ref Unsafe.AsRef<uint>((void*)Util.AllocHArray(dynamicOffsets))
-            );
+            fixed (uint* dynamicOffsetsPtr = dynamicOffsets)
+            {
+                RenderPassEncoderSetBindGroup(_impl, groupIndex,
+                    group.Impl,
+                    (uint)dynamicOffsets.Length,
+                    ref Unsafe.AsRef<uint>(dynamicOffsetsPtr)
+                );
+            }
         }
 
         public void SetBlendConstant(in Color color) => RenderPassEncoderSetBlendConstant(_impl, color);
@@ -94,5 +98,11 @@ namespace WGPU.NET
 
         public void SetViewport(float x, float y, float width, float height, float minDepth, float maxDepth)
             => RenderPassEncoderSetViewport(_impl, x, y, width, height, minDepth, maxDepth);
+
+        public void Dispose()
+        {
+            RenderPassEncoderRelease(_impl);
+            _impl = default;
+        }
     }
 }

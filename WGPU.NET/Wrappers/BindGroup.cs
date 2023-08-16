@@ -5,7 +5,7 @@ using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
-    public class BindGroup
+    public class BindGroup : IDisposable
     {
         private BindGroupImpl _impl;
 
@@ -29,13 +29,10 @@ namespace WGPU.NET
 
             Impl = impl;
         }
-        
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="BindGroup"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+
+        public void Dispose()
         {
-            BindGroupDrop(Impl);
+            BindGroupRelease(Impl);
             Impl = default;
         }
     }

@@ -20,7 +20,7 @@ namespace WGPU.NET
         public string TracePath;
     }
 
-    public class Adapter
+    public class Adapter : IDisposable
     {
         internal AdapterImpl Impl;
 
@@ -65,33 +65,56 @@ namespace WGPU.NET
         public bool HasFeature(FeatureName feature) => AdapterHasFeature(Impl, feature);
 
         public void RequestDevice(RequestDeviceCallback callback, string label, NativeFeature[] nativeFeatures, QueueDescriptor defaultQueue = default, 
-            Limits? limits = null, RequiredLimitsExtras? limitsExtras = null, DeviceExtras? deviceExtras = null)
+            Limits? limits = null, RequiredLimitsExtras? limitsExtras = null, DeviceExtras? deviceExtras = null, DeviceLostCallback deviceLostCallback = null)
         {
-            AdapterRequestDevice(Impl, new DeviceDescriptor()
+            Wgpu.RequiredLimits requiredLimits = default;
+            WgpuStructChain limitsExtrasChain = null;
+            WgpuStructChain deviceExtrasChain = null;
+
+            if (limitsExtras != null)
             {
-                defaultQueue = defaultQueue,
-                requiredLimits = limits==null ? IntPtr.Zero : 
-                Util.AllocHStruct(new Wgpu.RequiredLimits
-                {
-                    nextInChain = limitsExtras == null ? IntPtr.Zero : 
-                    new WgpuStructChain()
+                limitsExtrasChain = new WgpuStructChain()
                     .AddRequiredLimitsExtras(
-                        limitsExtras.Value.MaxPushConstantSize)
-                    .GetPointer(),
+                        limitsExtras.Value.MaxPushConstantSize);
+            }
+
+            if (limits != null)
+            {
+                requiredLimits = new Wgpu.RequiredLimits
+                {
+                    nextInChain = limitsExtras == null
+                        ? IntPtr.Zero
+                        : limitsExtrasChain.GetPointer(),
                     limits = limits.Value
-                })
-                ,
-                requiredFeaturesCount = (uint)nativeFeatures.Length,
-                requiredFeatures = Util.AllocHArray(nativeFeatures),
-                label = label,
-                nextInChain = deviceExtras==null ? IntPtr.Zero :
-                new WgpuStructChain()
-                .AddDeviceExtras(
-                    deviceExtras.Value.TracePath)
-                .GetPointer()
-            }, 
-            (s,d,m,_) => callback(s,new Device(d),m), IntPtr.Zero);
+                };
+            }
+
+            if (deviceExtras != null)
+                deviceExtrasChain = new WgpuStructChain().AddDeviceExtras(deviceExtras.Value.TracePath);
+
+            unsafe
+            {
+                fixed (NativeFeature* requiredFeatures = nativeFeatures)
+                {
+                    AdapterRequestDevice(Impl, new DeviceDescriptor()
+                        {
+                            defaultQueue = defaultQueue,
+                            requiredLimits = limits != null ? new IntPtr(&requiredLimits) : IntPtr.Zero,
+                            requiredFeaturesCount = (uint)nativeFeatures.Length,
+                            requiredFeatures = new IntPtr(requiredFeatures),
+                            label = label,
+                            deviceLostCallback = (reason, message, _) => deviceLostCallback?.Invoke(reason, message),
+                            nextInChain = deviceExtras==null ? IntPtr.Zero : deviceExtrasChain.GetPointer()
+                        }, 
+                        (s,d,m,_) => callback(s,new Device(d),m), IntPtr.Zero);
+                }
+            }
+            
+            limitsExtrasChain?.Dispose();
+            deviceExtrasChain?.Dispose();
         }
+
+        public void Dispose() => AdapterRelease(Impl);
     }
 
     public delegate void RequestDeviceCallback(RequestDeviceStatus status, Device device, string message);

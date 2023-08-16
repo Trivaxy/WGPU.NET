@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
@@ -17,7 +18,7 @@ namespace WGPU.NET
         public Color clearValue;
     }
 
-    public partial struct RenderPassDepthStencilAttachment
+    public struct RenderPassDepthStencilAttachment
     {
         public TextureView View;
 
@@ -38,7 +39,7 @@ namespace WGPU.NET
         public bool StencilReadOnly;
     }
 
-    public partial struct ImageCopyTexture
+    public struct ImageCopyTexture
     {
         public Texture Texture;
 
@@ -61,7 +62,7 @@ namespace WGPU.NET
     }
 
 
-    public class CommandEncoder
+    public class CommandEncoder : IDisposable
     {
         private CommandEncoderImpl _impl;
 
@@ -101,36 +102,56 @@ namespace WGPU.NET
             RenderPassDepthStencilAttachment? depthStencilAttachment
             )
         {
-            return new RenderPassEncoder(
-                CommandEncoderBeginRenderPass(Impl, new RenderPassDescriptor
+            Wgpu.RenderPassDepthStencilAttachment depthStencilAttachmentInner;
+
+            if (depthStencilAttachment != null)
+            {
+                depthStencilAttachmentInner = new Wgpu.RenderPassDepthStencilAttachment
                 {
-                    label = label,
-                    colorAttachments = Util.AllocHArray(colorAttachments.Length, 
-                        colorAttachments.Select(x=>new Wgpu.RenderPassColorAttachment
-                        {
-                            view = x.view.Impl,
-                            resolveTarget = x.resolveTarget?.Impl ?? default,
-                            loadOp = x.loadOp,
-                            storeOp = x.storeOp,
-                            clearValue = x.clearValue,
-                            
-                        })
-                    ),
-                    colorAttachmentCount = (uint)colorAttachments.Length,
-                    depthStencilAttachment = depthStencilAttachment==null ? IntPtr.Zero :
-                    Util.AllocHStruct(new Wgpu.RenderPassDepthStencilAttachment{
-                        view = depthStencilAttachment.Value.View.Impl,
-                        depthLoadOp = depthStencilAttachment.Value.DepthLoadOp,
-                        depthStoreOp = depthStencilAttachment.Value.DepthStoreOp,
-                        depthClearValue = depthStencilAttachment.Value.DepthClearValue,
-                        depthReadOnly = depthStencilAttachment.Value.DepthReadOnly,
-                        stencilLoadOp = depthStencilAttachment.Value.StencilLoadOp,
-                        stencilStoreOp = depthStencilAttachment.Value.StencilStoreOp,
-                        stencilClearValue = depthStencilAttachment.Value.StencilClearValue,
-                        stencilReadOnly = depthStencilAttachment.Value.StencilReadOnly
+                    view = depthStencilAttachment.Value.View.Impl,
+                    depthLoadOp = depthStencilAttachment.Value.DepthLoadOp,
+                    depthStoreOp = depthStencilAttachment.Value.DepthStoreOp,
+                    depthClearValue = depthStencilAttachment.Value.DepthClearValue,
+                    depthReadOnly = depthStencilAttachment.Value.DepthReadOnly,
+                    stencilLoadOp = depthStencilAttachment.Value.StencilLoadOp,
+                    stencilStoreOp = depthStencilAttachment.Value.StencilStoreOp,
+                    stencilClearValue = depthStencilAttachment.Value.StencilClearValue,
+                    stencilReadOnly = depthStencilAttachment.Value.StencilReadOnly
+                };
+            }
+
+            Span<Wgpu.RenderPassColorAttachment> colorAttachmentsInner =
+                stackalloc Wgpu.RenderPassColorAttachment[colorAttachments.Length];
+
+            for (int i = 0; i < colorAttachments.Length; i++)
+            {
+                RenderPassColorAttachment colorAttachment = colorAttachments[i];
+
+                colorAttachmentsInner[i] = new Wgpu.RenderPassColorAttachment()
+                {
+                    view = colorAttachment.view.Impl,
+                    resolveTarget = colorAttachment.resolveTarget?.Impl ?? default,
+                    loadOp = colorAttachment.loadOp,
+                    storeOp = colorAttachment.storeOp,
+                    clearValue = colorAttachment.clearValue,
+                };
+            }
+
+            unsafe
+            {
+                RenderPassEncoder encoder = new RenderPassEncoder(
+                    CommandEncoderBeginRenderPass(Impl, new RenderPassDescriptor
+                    {
+                        label = label,
+                        colorAttachments = new IntPtr(Unsafe.AsPointer(ref colorAttachmentsInner.GetPinnableReference())),
+                        colorAttachmentCount = (uint)colorAttachments.Length,
+                        depthStencilAttachment =
+                            depthStencilAttachment != null ? new IntPtr(&depthStencilAttachmentInner) : IntPtr.Zero
                     })
-                })
-            );
+                );
+
+                return encoder;
+            }
         }
 
         public void ClearBuffer(Buffer buffer, ulong offset, ulong size)
@@ -179,12 +200,9 @@ namespace WGPU.NET
         public void WriteTimestamp(QuerySet querySet, uint queryIndex)
             => CommandEncoderWriteTimestamp(Impl, querySet.Impl, queryIndex);
         
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="CommandEncoder"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
+        public void Dispose()
         {
-            CommandEncoderDrop(Impl);
+            CommandEncoderRelease(Impl);
             Impl = default;
         }
     }

@@ -4,7 +4,7 @@ using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
-    public class RenderBundleEncoder
+    public class RenderBundleEncoder : IDisposable
     {
         private RenderBundleEncoderImpl _impl;
 
@@ -48,11 +48,14 @@ namespace WGPU.NET
 
         public unsafe void SetBindGroup(uint groupIndex, BindGroup group, uint[] dynamicOffsets)
         {
-            RenderBundleEncoderSetBindGroup(_impl, groupIndex,
-                group.Impl,
-                (uint)dynamicOffsets.Length,
-                ref Unsafe.AsRef<uint>((void*)Util.AllocHArray(dynamicOffsets))
-            );
+            fixed (uint* dynamicOffsetsPtr = dynamicOffsets)
+            {
+                RenderBundleEncoderSetBindGroup(_impl, groupIndex,
+                    group.Impl,
+                    (uint)dynamicOffsets.Length,
+                    ref Unsafe.AsRef<uint>(dynamicOffsetsPtr)
+                );
+            }
         }
 
         public void SetIndexBuffer(Buffer buffer, IndexFormat format, ulong offset, ulong size)
@@ -63,5 +66,10 @@ namespace WGPU.NET
         public void SetVertexBuffer(uint slot, Buffer buffer, ulong offset, ulong size)
             => RenderBundleEncoderSetVertexBuffer(_impl, slot, buffer.Impl, offset, size);
 
+        public void Dispose()
+        {
+            RenderBundleEncoderRelease(_impl);
+            _impl = default;
+        }
     }
 }

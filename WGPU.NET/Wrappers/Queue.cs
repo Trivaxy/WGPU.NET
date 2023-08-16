@@ -7,23 +7,17 @@ using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
-    public class Queue
+    public class Queue : IDisposable
     {
-        private static Dictionary<QueueImpl, Queue> instances =
-            new Dictionary<QueueImpl, Queue>();
-
         private QueueImpl _impl;
 
-        private Queue(QueueImpl impl)
+        internal Queue(QueueImpl impl)
         {
             if (impl.Handle == IntPtr.Zero)
                 throw new ResourceCreationError(nameof(Queue));
 
             _impl = impl;
         }
-
-        internal static Queue For(QueueImpl impl)
-            => impl.Handle == IntPtr.Zero ? null : instances.GetOrCreate(impl, () => new Queue(impl));
 
         public void OnSubmittedWorkDone(QueueWorkDoneCallback callback)
         {
@@ -35,11 +29,12 @@ namespace WGPU.NET
 
         public unsafe void Submit(CommandBuffer[] commands)
         {
-            QueueSubmit(_impl, (uint)commands.Length,
-                ref Unsafe.AsRef<CommandBufferImpl>(
-                    (void*)Util.AllocHArray(commands.Length, commands.Select(x=>x.Impl))
-                )
-            );
+            Span<CommandBufferImpl> commandBufferImpls = stackalloc CommandBufferImpl[commands.Length];
+
+            for (int i = 0; i < commands.Length; i++)
+                commandBufferImpls[i] = commands[i].Impl;
+            
+            QueueSubmit(_impl, (uint)commands.Length, ref commandBufferImpls.GetPinnableReference());
         }
 
         public unsafe void WriteBuffer<T>(Buffer buffer, ulong bufferOffset, ReadOnlySpan<T> data)
@@ -64,6 +59,14 @@ namespace WGPU.NET
                 (IntPtr)Unsafe.AsPointer(ref MemoryMarshal.GetReference(data)),
                 (ulong)data.Length * structSize,
                 dataLayout, in writeSize);
+        }
+        
+        /// <summary>
+        /// This function will be called automatically when this Queue's associated Device is disposed.
+        /// </summary>
+        public void Dispose()
+        {
+            QueueRelease(_impl);
         }
     }
 }

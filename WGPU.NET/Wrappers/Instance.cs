@@ -3,7 +3,7 @@ using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
-    public class Instance
+    public class Instance : IDisposable
     {
         private InstanceImpl _impl;
 
@@ -91,7 +91,7 @@ namespace WGPU.NET
 
         public void ProcessEvents() => InstanceProcessEvents(_impl);
 
-        public void RequestAdapter(Surface compatibleSurface, PowerPreference powerPreference, bool forceFallbackAdapter, RequestAdapterCallback callback, BackendType? backendType = null)
+        public void RequestAdapter(Surface compatibleSurface, PowerPreference powerPreference, bool forceFallbackAdapter, RequestAdapterCallback callback, BackendType backendType)
         {
             InstanceRequestAdapter(_impl,
                 new RequestAdapterOptions()
@@ -99,11 +99,15 @@ namespace WGPU.NET
                     compatibleSurface = compatibleSurface.Impl,
                     powerPreference = powerPreference,
                     forceFallbackAdapter = forceFallbackAdapter,
-                    nextInChain = backendType == null ? IntPtr.Zero : 
-                    new WgpuStructChain()
-                    .AddAdapterExtras(backendType.Value).GetPointer()
+                    backendType = backendType
                 }, 
                 (s,a,m,_) => callback(s, new Adapter(a), m), IntPtr.Zero);
+        }
+
+        public void Dispose()
+        {
+            InstanceRelease(_impl);
+            _impl = default;
         }
     }
 

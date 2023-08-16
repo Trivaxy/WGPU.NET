@@ -23,4 +23,13 @@ namespace WGPU.NET
 
         }
     }
+
+    public class TextureDoesNotOwnViewException : Exception
+    {
+        public TextureDoesNotOwnViewException(string textureName)
+            : base($"The texture {textureName} does not own the texture view")
+        {
+            
+        }
+    }
 }

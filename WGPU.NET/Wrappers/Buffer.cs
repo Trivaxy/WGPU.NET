@@ -4,7 +4,7 @@ using static WGPU.NET.Wgpu;
 
 namespace WGPU.NET
 {
-    public class Buffer
+    public class Buffer : IDisposable
     {
         private BufferImpl _impl;
 
@@ -60,21 +60,10 @@ namespace WGPU.NET
 
         public void Unmap() => BufferUnmap(Impl);
 
-        /// <summary>
-        /// Destroys the GPU Resource associated to this <see cref="Buffer"/>
-        /// </summary>
-        public void DestroyResource()
+        public void Dispose()
         {
             BufferDestroy(Impl);
-            Impl = default;
-        }
-        
-        /// <summary>
-        /// Signals to the underlying rust API that this <see cref="Buffer"/> isn't used anymore
-        /// </summary>
-        public void FreeHandle()
-        {
-            BufferDrop(Impl);
+            BufferRelease(Impl);
             Impl = default;
         }
     }
