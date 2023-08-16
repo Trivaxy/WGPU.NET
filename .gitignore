@@ -3,3 +3,4 @@
 .vs/
 NugetPacking/
 .idea/
+*.user
