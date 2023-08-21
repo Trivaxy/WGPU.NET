@@ -61,6 +61,22 @@ namespace WGPU.NET
         }
     }
 
+    public struct ImageCopyBuffer
+    {
+        public Buffer Buffer;
+
+        public TextureDataLayout TextureDataLayout;
+        
+        public static implicit operator Wgpu.ImageCopyBuffer(ImageCopyBuffer t)
+        {
+            return new Wgpu.ImageCopyBuffer
+            {
+                layout = t.TextureDataLayout,
+                buffer = t.Buffer.Impl
+            };
+        }
+    }
+
 
     public class CommandEncoder : IDisposable
     {
@@ -162,22 +178,16 @@ namespace WGPU.NET
             => CommandEncoderCopyBufferToBuffer(Impl, source.Impl, sourceOffset,
                 destination.Impl, destinationOffset, size);
 
-        public void CopyBufferToTexure(in ImageCopyBuffer source, in ImageCopyTexture destination,
+        public void CopyBufferToTexture(in ImageCopyBuffer source, in ImageCopyTexture destination,
             in Extent3D copySize)
+            => CommandEncoderCopyBufferToTexture(Impl, source, destination, in copySize);
 
-            => CommandEncoderCopyBufferToTexture(Impl, in source, new Wgpu.ImageCopyTexture
-            {
-
-            }, in copySize);
-
-        public void CopyTexureToBuffer(in ImageCopyTexture source, in ImageCopyBuffer destination,
+        public void CopyTextureToBuffer(in ImageCopyTexture source, in ImageCopyBuffer destination,
             in Extent3D copySize)
+            => CommandEncoderCopyTextureToBuffer(Impl, source, destination, in copySize);
 
-            => CommandEncoderCopyTextureToBuffer(Impl, source, in destination, in copySize);
-
-        public void CopyTexureToTexture(in ImageCopyTexture source, in ImageCopyTexture destination,
+        public void CopyTextureToTexture(in ImageCopyTexture source, in ImageCopyTexture destination,
             in Extent3D copySize)
-
             => CommandEncoderCopyTextureToTexture(Impl, source, destination, in copySize);
 
         public CommandBuffer Finish(string label) => new CommandBuffer(CommandEncoderFinish(Impl,
