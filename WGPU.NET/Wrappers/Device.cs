@@ -137,7 +137,7 @@ namespace WGPU.NET
             var desc = new BufferDescriptor
             {
                 label = label,
-                mappedAtCreation = mappedAtCreation,
+                mappedAtCreation = mappedAtCreation ? 1u : 0u,
                 size = size,
                 usage = (uint)usage
             };
@@ -218,8 +218,8 @@ namespace WGPU.NET
                             label = label,
                             type = queryType,
                             count = count,
-                            pipelineStatistics = new IntPtr(pipelineStatisticsPtr),
-                            pipelineStatisticsCount = (uint)pipelineStatistics.Length
+                            /*pipelineStatistics = new IntPtr(pipelineStatisticsPtr),
+                            pipelineStatisticsCount = (uint)pipelineStatistics.Length*/
                         })
                     );
                 }
@@ -238,11 +238,11 @@ namespace WGPU.NET
                         {
                             label = label,
                             colorFormats = new IntPtr(colorFormatsPtr),
-                            colorFormatsCount = (uint)colorFormats.Length,
+                            colorFormatCount = (uint)colorFormats.Length,
                             depthStencilFormat = depthStencilFormat,
                             sampleCount = sampleCount,
-                            depthReadOnly = depthReadOnly,
-                            stencilReadOnly = stencilReadOnly
+                            depthReadOnly = depthReadOnly ? 1u : 0u,
+                            stencilReadOnly = stencilReadOnly ? 1u : 0u
                         })
                     );
                 }
@@ -391,7 +391,7 @@ namespace WGPU.NET
             );
         }
 
-        public SwapChain CreateSwapChain(string label, Surface surface, TextureUsage usage,
+        /*public SwapChain CreateSwapChain(string label, Surface surface, TextureUsage usage,
             TextureFormat format, uint width, uint height, PresentMode presentMode)
         {
             return new SwapChain(
@@ -413,7 +413,7 @@ namespace WGPU.NET
             return new SwapChain(
                 DeviceCreateSwapChain(Impl, surface.Impl, descriptor)
             );
-        }
+        }*/
 
         public Texture CreateTexture(string label, TextureUsage usage,
             TextureDimension dimension, Extent3D size, TextureFormat format,
@@ -457,10 +457,12 @@ namespace WGPU.NET
         {
             limits = new SupportedLimits();
 
-            return DeviceGetLimits(Impl, ref limits);
+            return DeviceGetLimits(Impl, ref limits) == 1u;
         }
+        
+        public Queue GetQueue() => Queue.For(DeviceGetQueue(Impl));
 
-        public bool HasFeature(FeatureName feature) => DeviceHasFeature(Impl, feature);
+        public bool HasFeature(FeatureName feature) => DeviceHasFeature(Impl, feature) == 1u;
 
         public void PushErrorScope(ErrorFilter filter) => DevicePushErrorScope(Impl, filter);
         public void PopErrorScope(ErrorCallback callback)
