@@ -223,7 +223,7 @@ namespace WGPU.NET
     public delegate void CompilationInfoCallback(CompilationInfoRequestStatus status,
         ReadOnlySpan<CompilationMessage> messages);
 
-    public class SwapChain : IDisposable
+    /*public class SwapChain : IDisposable
     {
         private SwapChainImpl _impl;
 
@@ -246,7 +246,7 @@ namespace WGPU.NET
             SwapChainRelease(_impl);
             _impl = default;
         }
-    }
+    }*/
 
     public delegate void QueueWorkDoneCallback(QueueWorkDoneStatus status); 
 

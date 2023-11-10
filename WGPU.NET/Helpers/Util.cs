@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace WGPU.NET
 {
@@ -17,7 +16,7 @@ namespace WGPU.NET
 			return ptr;
 		}
   
-		public unsafe static IntPtr AllocHArray(byte[] arr)
+		public static unsafe IntPtr AllocHArray(byte[] arr)
 		{
 			IntPtr ptr = Marshal.AllocHGlobal(arr.Length);
   
@@ -28,7 +27,7 @@ namespace WGPU.NET
 			return ptr;
 		}
   
-		public unsafe static IntPtr AllocHArray<T>(T[] arr)
+		public static unsafe IntPtr AllocHArray<T>(T[] arr)
 			where T : struct
 		{
 			int size = sizeof(T);
@@ -45,7 +44,7 @@ namespace WGPU.NET
 			return ptr;
         }
   
-		public unsafe static IntPtr AllocHArray<T>(int count, IEnumerable<T> items)
+		public static unsafe IntPtr AllocHArray<T>(int count, IEnumerable<T> items)
 			where T : struct
 		{
 			int size = sizeof(T);
@@ -109,5 +108,37 @@ namespace WGPU.NET
   
 			return newVal;
 		}
-	}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Wgpu.BackendType ToBackend(this Wgpu.InstanceBackend type) => type switch
+		{
+			Wgpu.InstanceBackend.All => Wgpu.BackendType.Undefined,
+			Wgpu.InstanceBackend.Vulkan => Wgpu.BackendType.Vulkan,
+			Wgpu.InstanceBackend.GL => Wgpu.BackendType.OpenGLES,
+			Wgpu.InstanceBackend.Metal => Wgpu.BackendType.Metal,
+			Wgpu.InstanceBackend.DX12 => Wgpu.BackendType.D3D12,
+			Wgpu.InstanceBackend.DX11 => Wgpu.BackendType.D3D11,
+			Wgpu.InstanceBackend.BrowserWebGPU => Wgpu.BackendType.WebGPU,
+			Wgpu.InstanceBackend.Primary => Wgpu.BackendType.Vulkan,
+			Wgpu.InstanceBackend.Secondary => Wgpu.BackendType.OpenGLES,
+			Wgpu.InstanceBackend.Force32 => Wgpu.BackendType.Force32,
+			_ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+		};
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Wgpu.InstanceBackend ToInstanceBackend(this Wgpu.BackendType type) => type switch
+		{
+			Wgpu.BackendType.Undefined => Wgpu.InstanceBackend.All,
+			Wgpu.BackendType.Null => Wgpu.InstanceBackend.All,
+			Wgpu.BackendType.WebGPU => Wgpu.InstanceBackend.BrowserWebGPU,
+			Wgpu.BackendType.D3D11 => Wgpu.InstanceBackend.DX11,
+			Wgpu.BackendType.D3D12 => Wgpu.InstanceBackend.DX12,
+			Wgpu.BackendType.Metal => Wgpu.InstanceBackend.Metal,
+			Wgpu.BackendType.Vulkan => Wgpu.InstanceBackend.Vulkan,
+			Wgpu.BackendType.OpenGL => Wgpu.InstanceBackend.GL,
+			Wgpu.BackendType.OpenGLES => Wgpu.InstanceBackend.GL,
+			Wgpu.BackendType.Force32 => Wgpu.InstanceBackend.Force32,
+			_ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+		};
+    }
 }

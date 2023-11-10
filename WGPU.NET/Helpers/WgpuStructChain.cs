@@ -20,7 +20,7 @@ namespace WGPU.NET
 			AddStruct(new Wgpu.PrimitiveDepthClipControl()
 			{
 				chain = new Wgpu.ChainedStruct { sType = Wgpu.SType.PrimitiveDepthClipControl },
-				unclippedDepth = unclippedDepth
+				unclippedDepth = unclippedDepth ? 1u : 0u
 			});
 
 			return this;
@@ -129,6 +129,17 @@ namespace WGPU.NET
 
 			return this;
 		}
+		
+		public WgpuStructChain AddAdapterExtras(Wgpu.BackendType backend = default)
+		{
+			AddStruct(new Wgpu.AdapterExtras
+			{
+				chain = new Wgpu.ChainedStruct { sType = (Wgpu.SType)Wgpu.NativeSType.STypeAdapterExtras },
+				backend = backend
+			});
+
+			return this;
+		}
 
 		public WgpuStructChain AddDeviceExtras(string tracePath = default)
 		{
@@ -146,7 +157,10 @@ namespace WGPU.NET
 			AddStruct(new Wgpu.RequiredLimitsExtras()
 			{
 				chain = new Wgpu.ChainedStruct { sType = (Wgpu.SType)Wgpu.NativeSType.STypeRequiredLimitsExtras },
-				maxPushConstantSize = maxPushConstantSize
+				limits = new Wgpu.NativeLimits
+				{
+					maxPushConstantSize =  maxPushConstantSize
+				}
 			});
 
 			return this;

@@ -128,11 +128,11 @@ namespace WGPU.NET
                     depthLoadOp = depthStencilAttachment.Value.DepthLoadOp,
                     depthStoreOp = depthStencilAttachment.Value.DepthStoreOp,
                     depthClearValue = depthStencilAttachment.Value.DepthClearValue,
-                    depthReadOnly = depthStencilAttachment.Value.DepthReadOnly,
+                    depthReadOnly = depthStencilAttachment.Value.DepthReadOnly ? 1u : 0u,
                     stencilLoadOp = depthStencilAttachment.Value.StencilLoadOp,
                     stencilStoreOp = depthStencilAttachment.Value.StencilStoreOp,
                     stencilClearValue = depthStencilAttachment.Value.StencilClearValue,
-                    stencilReadOnly = depthStencilAttachment.Value.StencilReadOnly
+                    stencilReadOnly = depthStencilAttachment.Value.StencilReadOnly ? 1u : 0u
                 };
             }
 

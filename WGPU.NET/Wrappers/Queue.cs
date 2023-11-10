@@ -9,6 +9,8 @@ namespace WGPU.NET
 {
     public class Queue : IDisposable
     {
+        private readonly static Dictionary<QueueImpl, Queue> instances = new Dictionary<QueueImpl, Queue>();
+        
         private QueueImpl _impl;
 
         internal Queue(QueueImpl impl)
@@ -18,6 +20,9 @@ namespace WGPU.NET
 
             _impl = impl;
         }
+        
+        internal static Queue For(QueueImpl impl)
+            => impl.Handle == IntPtr.Zero ? null : instances.GetOrCreate(impl, () => new Queue(impl));
 
         public void OnSubmittedWorkDone(QueueWorkDoneCallback callback)
         {
